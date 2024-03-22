@@ -1,0 +1,6 @@
+middle:
+  - na_strechu
+  - front
+  - prodluzovaci:
+      optional: 1
+      rear
