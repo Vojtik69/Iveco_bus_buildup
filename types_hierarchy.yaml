@@ -1,6 +1,21 @@
-middle:
-  - na_strechu
-  - front
-  - prodluzovaci:
-      optional: 1
-      rear
+- name: middle
+  skippable: False
+  multiselection: False
+  subordinates:
+    - name: na_strechu
+      skippable: False
+      multiselection: False
+    - name: front
+      skippable: False
+      multiselection: False
+      subordinates:
+        - name: front_accessories
+          skippable: False
+          multiselection: True
+    - name: prodluzovaci
+      skippable: True
+      multiselection: False
+      subordinates:
+        - name: rear
+          skippable: False
+          multiselection: False

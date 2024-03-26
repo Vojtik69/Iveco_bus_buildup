@@ -11,16 +11,53 @@ import yaml
 def MyCustomGui():
 
         csv_file = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
-        typy_combo = ["rear", "prodluzovaci", "middle", "front", "na_strechu", ]
-        typy_list = ["front_accessories", ]
 
         with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
             hierarchie_typu = yaml.safe_load(file)
 
-        def najdi_potomky_prvni_generace(hierarchie, rodic):
-            return hierarchie.get(rodic, [])
+        def najit_prvek_podle_hodnoty(data, hodnota):
+            if isinstance(data, dict):
+                for klic, hodnota_vnitrni in data.items():
+                    if isinstance(hodnota_vnitrni, (dict, list)):
+                        nalezeny_prvek = najit_prvek_podle_hodnoty(hodnota_vnitrni, hodnota)
+                        if nalezeny_prvek is not None:
+                            return nalezeny_prvek
+                    elif klic == 'name' and hodnota_vnitrni == hodnota:
+                        return data
+            elif isinstance(data, list):
+                for prvek in data:
+                    if isinstance(prvek, (dict, list)):
+                        nalezeny_prvek = najit_prvek_podle_hodnoty(prvek, hodnota)
+                        if nalezeny_prvek is not None:
+                            return nalezeny_prvek
+            return None
 
-        print(najdi_potomky_prvni_generace(hierarchie_typu, 'middle'))
+        def extractAllNames(data):
+            names = []
+            for item in data:
+                names.append([item['name'],item['multiselection']])
+                if 'subordinates' in item:
+                    names.extend(extractAllNames(item['subordinates']))
+            return names
+
+        def findParent(data, target_name, parent=None):
+            for item in data:
+                if item['name'] == target_name:
+                    return parent
+                elif 'subordinates' in item:
+                    result = findParent(item['subordinates'], target_name, item)
+                    if result is not None:
+                        return result
+
+        def getSubordinantsNames(hierarchie_typu, node_name, descendants=[]):
+            node = najit_prvek_podle_hodnoty(hierarchie_typu, node_name)
+            try:
+                for subordinate in node['subordinates']:
+                    descendants.append([subordinate['name'], subordinate['multiselection']])
+                    if subordinate['skippable']:
+                        getSubordinantsNames([subordinate], subordinate['name'],descendants)
+            except Exception as e: print(e)
+            return descendants
 
         # Method called on clicking 'Close'.
         def onClose(event):
@@ -31,15 +68,14 @@ def MyCustomGui():
                 gui2.tellUser('Done!')
                 
         def onReset(event):
-                # vyber_rear_end.setValues(najdi_vsechny_daneho_typu("rear"))
-                # vyber_rear_end.set("---")
-                # vyber_middle_part.setValues(najdi_vsechny_daneho_typu("middle"))
-                # vyber_middle_part.set("---")
-                # vyber_front_end.setValues(najdi_vsechny_daneho_typu("front"))
-                # vyber_front_end.set("---")
-                # vyber_front_accessories.clear()
-                # updateLabelyCest()
-                pass
+                for [typ,multiselection] in extractAllNames(hierarchie_typu):
+                    if multiselection:
+                        widgety[f'vyber_{typ}'].clear()
+                    else:
+                        widgety[f'vyber_{typ}'].setValues(najdi_vsechny_daneho_typu(typ))
+                        widgety[f'vyber_{typ}'].value = "---"
+                updateLabelyCest()
+
                 
         def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False):
             kompatibilni_radky = [("---", "---")]
@@ -104,66 +140,40 @@ def MyCustomGui():
             return typ
             
         def updateLabelyCest():
-                # cesta_rear_end.text = vyber_rear_end.value
-                # cesta_middle_part.text = vyber_middle_part.value
-                # cesta_front_end.text = vyber_front_end.value
-                pass
-                
-        def updateListFrontAccessories():
-                # print(vyber_front_end.value)
-                # print(najdiLabelPodleCesty(vyber_front_end.value))
-                # print(najdi_kompatibilni_radky(najdiLabelPodleCesty(vyber_front_end.value), "front_accessories", True))
-                #
-                # vyber_front_accessories.clear()
-                # vyber_front_accessories.append(najdi_kompatibilni_radky(najdiLabelPodleCesty(vyber_front_end.value), "front_accessories", True))
-                pass
-      
-        
-        # def onSelectedMiddle(event):
-        #         rear_value = vyber_rear_end.value
-        #         vyber_rear_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "rear"))
-        #         if rear_value in vyber_rear_end.values : vyber_rear_end.set(rear_value)
-        #         front_value = vyber_front_end.value
-        #         vyber_front_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "front"))
-        #         if front_value in vyber_front_end.values : vyber_front_end.set(front_value)
-        #         updateLabelyCest()
-        #         updateListFrontAccessories()
-        #
-        #
-        # def onSelectedRear(event):
-        #         middle_value = vyber_middle_part.value
-        #         vyber_middle_part.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "middle"))
-        #         if middle_value in vyber_middle_part.values : vyber_middle_part.set(middle_value)
-        #         front_value = vyber_front_end.value
-        #         vyber_front_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(vyber_middle_part.value), "front"))
-        #         if front_value in vyber_front_end.values : vyber_front_end.set(front_value)
-        #         updateLabelyCest()
-        #         updateListFrontAccessories()
-        #
-        # def onSelectedFront(event):
-        #         print(event.widget.name)
-        #         middle_value = vyber_middle_part.value
-        #         vyber_middle_part.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "middle"))
-        #         if middle_value in vyber_middle_part.values : vyber_middle_part.set(middle_value)
-        #         rear_value = vyber_rear_end.value
-        #         vyber_rear_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(vyber_middle_part.value), "rear"))
-        #         if rear_value in vyber_rear_end.values : vyber_rear_end.set(rear_value)
-        #         updateLabelyCest()
-        #         updateListFrontAccessories()
+            for [typ,multiselection] in extractAllNames(hierarchie_typu):
+                try:
+                    widgety[f'cesta_{typ}'].text = widgety[f'vyber_{typ}'].value
+                except:
+                    pass
 
         def onSelectedCombo(event):
+            widgety[f'cesta_{event.widget.name}'].text = widgety[f'vyber_{event.widget.name}'].value
+            subordinants = getSubordinantsNames(hierarchie_typu, event.widget.name,[])
+            for [typ, multiselection] in subordinants:
+                if widgety[f'vyber_{event.widget.name}'].value == "---":
+                    if najit_prvek_podle_hodnoty(hierarchie_typu, event.widget.name).get("skippable",False):
+                        parent = findParent(hierarchie_typu, event.widget.name)
+                        if multiselection:
+                            widgety["vyber_" + typ].clear()
+                            widgety["vyber_" + typ].append(
+                                najdi_kompatibilni_radky(najdiLabelPodleCesty(widgety[f'vyber_{parent["name"]}'].value),
+                                                         typ),True)
+                        else:
+                            widgety["vyber_" + typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(widgety[f'vyber_{parent["name"]}'].value), typ, True))
+                    else:
+                        if multiselection:
+                            widgety["vyber_" + typ].clear()
+                            widgety["vyber_" + typ].append(najdi_vsechny_daneho_typu(typ))
+                        else:
+                            widgety["vyber_" + typ].setValues(najdi_vsechny_daneho_typu(typ))
+                else:
+                    if multiselection:
+                        widgety["vyber_" + typ].clear()
+                        widgety["vyber_" + typ].append(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ, True))
+                    else:
+                        widgety["vyber_"+typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ))
+                        widgety[f'cesta_{typ}'].text = widgety[f'vyber_{typ}'].value
 
-                # event.widget.name
-                # rear_value = vyber_rear_end.value
-                # vyber_rear_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "rear"))
-                # if rear_value in vyber_rear_end.values : vyber_rear_end.set(rear_value)
-                # front_value = vyber_front_end.value
-                # vyber_front_end.setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), "front"))
-                # if front_value in vyber_front_end.values : vyber_front_end.set(front_value)
-                # updateLabelyCest()
-                # updateListFrontAccessories()
-                pass
-                
         obrazek              = gui.Label(icon='N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/bus.png')
         
         close  = gui.Button  ('Close', command=onClose)
@@ -174,23 +184,23 @@ def MyCustomGui():
         widgety = {}
 
         # Vytvoř widgety
-        for typ in typy_combo:
-            label_objekt = gui.Label(text=f'{typ.capitalize()}')
-            vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ), command=onSelectedCombo, name=typ)
-            cesta_objekt = gui2.Label("---", font=dict(size=8, italic=True))
+        for [typ,multiselection] in extractAllNames(hierarchie_typu):
+            if multiselection:
+                label_objekt = gui.Label(text=f'{typ.capitalize()}')
+                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=typ)
 
-            # Uložení objektů do slovníku
-            widgety[f'label_{typ}'] = label_objekt
-            widgety[f'vyber_{typ}'] = vyber_objekt
-            widgety[f'cesta_{typ}'] = cesta_objekt
+                # Uložení objektů do slovníku
+                widgety[f'label_{typ}'] = label_objekt
+                widgety[f'vyber_{typ}'] = vyber_objekt
+            else:
+                label_objekt = gui.Label(text=f'{typ.capitalize()}')
+                vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ), command=onSelectedCombo, name=typ)
+                cesta_objekt = gui2.Label("---", font=dict(size=8, italic=True))
 
-        for typ in typy_list:
-            label_objekt = gui.Label(text=f'{typ.capitalize()}')
-            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=typ)
-
-            # Uložení objektů do slovníku
-            widgety[f'label_{typ}'] = label_objekt
-            widgety[f'vyber_{typ}'] = vyber_objekt
+                # Uložení objektů do slovníku
+                widgety[f'label_{typ}'] = label_objekt
+                widgety[f'vyber_{typ}'] = vyber_objekt
+                widgety[f'cesta_{typ}'] = cesta_objekt
 
         # Napolohuj Widgety
         mainFrame = gui.VFrame (
@@ -199,9 +209,9 @@ def MyCustomGui():
                     (900, widgety['label_front_accessories']),
                     (150, obrazek, 10, widgety['vyber_front_accessories']),
                     (5),
-                    (widgety['label_rear'], 10, widgety['label_middle'], 10, widgety['label_front']),
-                    (widgety['vyber_rear'], 10, widgety['vyber_middle'], 10, widgety['vyber_front']),
-                    (widgety['cesta_rear'], 10, widgety['cesta_middle'], 10, widgety['cesta_front']),
+                    (widgety['label_rear'], 10, widgety['label_prodluzovaci'], 10, widgety['label_middle'], 10, widgety['label_front']),
+                    (widgety['vyber_rear'], 10, widgety['vyber_prodluzovaci'], 10, widgety['vyber_middle'], 10, widgety['vyber_front']),
+                    (widgety['cesta_rear'], 10, widgety['cesta_prodluzovaci'], 10, widgety['cesta_middle'], 10, widgety['cesta_front']),
                     (15),
                     (500,create,reset,close)
             )
