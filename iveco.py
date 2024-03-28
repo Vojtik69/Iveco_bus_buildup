@@ -7,12 +7,11 @@ import itertools
 from functools import partial
 import csv
 import yaml
+import os.path
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
 widgetyAddPart = {}
-boxesParents = []
-boxesSubordinants = []
 dialogSetCompatibility = gui.Dialog(caption  = "Set compatibility")
 dialogModelBuildup = gui.Dialog(caption  = "Bus model buildup")
 dialogAddPart = gui.Dialog(caption  = "Add Part")
@@ -68,8 +67,8 @@ def getSubordinantsNames(hierarchie_typu, node_name, onlynames=False, descendant
             else:
                 descendants.append([subordinate['name'], subordinate['multiselection']])
             if subordinate['skippable']:
-                getSubordinantsNames([subordinate], subordinate['name'],descendants)
-    except Exception as e: print(e)
+                getSubordinantsNames([subordinate], subordinate['name'],onlynames,descendants)
+    except Exception as e: print("Chyba v getSubordinantsNames(): " + str(e))
     return descendants
 
 
@@ -113,6 +112,15 @@ def najdi_vsechny_daneho_typu(hledany_typ, only_names=False):
 
     if only_names : vsechny = [item[1] for item in vsechny[1:]]
     return vsechny
+
+def najdi_vsechny_party():
+    vsechny_party = []
+    with open(csv_file, newline='') as file:
+        reader = csv.reader(file)
+        next(reader)  # preskoc hlavicku
+        for row in reader:
+            vsechny_party.append(row[0])  # pridá obsah prvního a tretího sloupce
+    return vsechny_party
 
 def najdiLabelPodleCesty(cesta):
     label = "Nenalezeno"
@@ -241,45 +249,85 @@ def ModelBuildupGUI():
 
 
 def SetCompatibilityGUI():
-    global boxesParents
-    global boxesSubordinants
-
+    boxesParents = []
+    boxesSubordinants = []
     rada1 = ()
     rada2 = ()
+    tabulky_parents = {}
+    tabulky_subordinants = {}
+
+    def onCancelCompatibilityGUI():
+        global dialogSetCompatibility
+        dialogSetCompatibility.Hide()
+        dialogSetCompatibility = gui.Dialog(caption = "Set compatibility")
+        global tabulky_parents
+        global tabulky_subordinants
+        tabulky_parents = {}
+        tabulky_subordinants = {}
+
+    parent = findParent(hierarchie_typu, widgetyAddPart['vyber_typ'].value)
+    if parent:
+        boxesParents = [parent["name"]]
+        while parent["skippable"]:
+            parent = findParent(hierarchie_typu, parent["name"])
+            boxesParents.append(parent["name"])
+
+    boxesSubordinants = getSubordinantsNames(hierarchie_typu, widgetyAddPart['vyber_typ'].value, onlynames=True,descendants=[])
+
+    def createTable(type):
+        root = gui.TableCellData(headers=[{'text': 'Part'}, {'text': 'Position'}])
+        row = 0
+        for part in najdi_vsechny_daneho_typu(type, only_names=True):
+            root.setData(row, 0, value=part, type='string', state='disabled')
+            root.setData(row, 1, value='[,,]', type='string', state='enabled')
+            row += 1
+
+        tabulka = gui.TableView()
+        model = gui.TableDataModel(root, parent=tabulka)
+        delegate = gui.TableDelegate(parent=tabulka)
+        tabulka.SetItemDelegate(delegate)
+        sort_filter_model = gui.TableSortFilterModel(model)
+        tabulka.model = sort_filter_model
+        return tabulka
 
     for parent in boxesParents:
         label_objekt = gui.Label(text=f'{parent.capitalize()}')
-        vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=parent)
+        tabulky_parents[parent] = createTable(parent)
 
-        # Uložení objektů do slovníku
-        # TODO: TableView
-        widgetyBuildup[f'label_{parent}'] = label_objekt
-        widgetyBuildup[f'vyber_{parent}'] = vyber_objekt
-        rada1 = rada1 + (widgetyBuildup[f'label_{parent}'],10,)
-        rada2 = rada2 + (widgetyBuildup[f'vyber_{parent}'],10,)
+        rada1 = rada1 + (label_objekt,10,)
+        rada2 = rada2 + (tabulky_parents[parent],10,)
 
-    rada1 = rada1 + (50,)
-    rada2 = rada2 + (50,)
+    rada1 = rada1[:-1]
+    rada2 = rada2[:-1]
+    parentsFrame = gui.VFrame(rada1, rada2)
+    rada1 = ()
+    rada2 = ()
 
     for subordinate in boxesSubordinants:
         label_objekt = gui.Label(text=f'{subordinate.capitalize()}')
-        vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=subordinate)
+        tabulky_subordinants[subordinate] = createTable(subordinate)
 
-        # Uložení objektů do slovníku
-        # TODO: TableView
-        widgetyBuildup[f'label_{subordinate}'] = label_objekt
-        widgetyBuildup[f'vyber_{subordinate}'] = vyber_objekt
-        rada1 = rada1 + (widgetyBuildup[f'label_{subordinate}'],10,)
-        rada2 = rada2 + (widgetyBuildup[f'vyber_{subordinate}'],10,)
+        rada1 = rada1 + (label_objekt,10,)
+        rada2 = rada2 + (tabulky_subordinants[subordinate],10,)
+
+    rada1 = rada1[:-1]
+    rada2 = rada2[:-1]
+    subordinatesFrame = gui.VFrame(rada1, rada2)
+    rada1 = ()
+    rada2 = ()
+
 
 
     global compatibilityGuiFrame
     global dialogAddPart
 
-    cancel  = gui.Button('Cancel')
+    cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
     confirm = gui.Button('Confirm')
 
-    compatibilityGuiFrame = gui.VFrame(rada1, rada2, (800, confirm, cancel))
+    sep = gui.Separator(orientation='vertical', spacing='30')
+
+    upperFrame = gui.HFrame(parentsFrame, sep, subordinatesFrame)
+    compatibilityGuiFrame = gui.VFrame(upperFrame, (800, confirm, cancel))
 
     dialogSetCompatibility.recess().add(compatibilityGuiFrame)
 
@@ -289,22 +337,10 @@ def SetCompatibilityGUI():
 
 
 def AddPartGUI():
-
-    def typeChange(event):
-        global boxesParents
-        global boxesSubordinants
-        parent = findParent(hierarchie_typu, event.value)
-        boxesParents = [parent["name"]]
-        while parent["skippable"]:
-            parent = findParent(hierarchie_typu, parent["name"])
-            boxesParents.append(parent["name"])
-        print(boxesParents)
-
-        boxesSubordinants = getSubordinantsNames(hierarchie_typu, event.value, onlynames=True)
-        print(boxesSubordinants)
+    global widgetyAddPart
 
     widgetyAddPart['label_typ'] = gui.Label(text="Type of new part:")
-    widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), command=typeChange, name="vyber_typ")
+    widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ")
 
     widgetyAddPart['label_cesta'] = gui.Label(text="Path to part:")
     widgetyAddPart['vyber_cesta'] = gui.OpenFileEntry(placeholdertext="Path to File")
@@ -315,13 +351,27 @@ def AddPartGUI():
 
     # Method called on clicking 'Close'.
     def onCloseAddPartGUI(event):
+        global dialogAddPart
         dialogAddPart.Hide()
+        dialogAddPart = gui.Dialog(caption  = "Add Part")
 
     def onResetAddPartGUI(event):
-        pass
+        widgetyAddPart['vyber_nazev'].value = ""
+        widgetyAddPart['vyber_cesta'].value = ""
+        widgetyAddPart['vyber_typ'].value = ""
+
+    def checkNotEmpty():
+        if widgetyAddPart['vyber_nazev'].value in najdi_vsechny_party():
+            gui2.tellUser("Name of new part is not unique")
+            return
+        if not os.path.isfile(widgetyAddPart['vyber_cesta'].value):
+            gui2.tellUser("Path is not valid. The file does not exist.")
+            return
+
+        SetCompatibilityGUI()
 
     close = gui.Button('Close', command=onCloseAddPartGUI)
-    add   = gui.Button('Set compatibility >>>', command=SetCompatibilityGUI)
+    add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)
     reset = gui.Button('Reset', command=onResetAddPartGUI)
 
     upperFrame = gui.HFrame(
