@@ -12,9 +12,11 @@ import os.path
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
 widgetyAddPart = {}
+widgetyEditPart = {}
 dialogSetCompatibility = gui.Dialog(caption  = "Set compatibility")
 dialogModelBuildup = gui.Dialog(caption  = "Bus model buildup")
 dialogAddPart = gui.Dialog(caption  = "Add Part")
+dialogEditPart = gui.Dialog(caption  = "Edit Part")
 csv_file = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
@@ -59,7 +61,9 @@ def findParent(data, target_name, parent=None):
                 return result
 
 def getSubordinantsNames(hierarchie_typu, node_name, onlynames=False, descendants=[]):
+    print(node_name)
     node = najit_prvek_podle_hodnoty(hierarchie_typu, node_name)
+    print(node)
     try:
         for subordinate in node['subordinates']:
             if onlynames:
@@ -207,7 +211,7 @@ def ModelBuildupGUI():
     create = gui.Button('Run', command=onRunModelBuildup)
     reset  = gui.Button('Reset', command=onResetModelBuildup)
     add =    gui.Button('Add Part', command=AddPartGUI)
-    edit =   gui.Button('Edit Part', command=onResetModelBuildup)
+    edit =   gui.Button('Edit Part', command=EditPartGUI)
 
     # Vytvoř widgetyBuildup
     for [typ,multiselection] in extractAllNames(hierarchie_typu):
@@ -248,7 +252,7 @@ def ModelBuildupGUI():
     dialogModelBuildup.show(width=1000, height=500)
 
 
-def SetCompatibilityGUI():
+def SetCompatibilityGUI(typ):
     boxesParents = []
     boxesSubordinants = []
     rada1 = ()
@@ -265,14 +269,14 @@ def SetCompatibilityGUI():
         tabulky_parents = {}
         tabulky_subordinants = {}
 
-    parent = findParent(hierarchie_typu, widgetyAddPart['vyber_typ'].value)
+    parent = findParent(hierarchie_typu, typ)
     if parent:
         boxesParents = [parent["name"]]
         while parent["skippable"]:
             parent = findParent(hierarchie_typu, parent["name"])
             boxesParents.append(parent["name"])
 
-    boxesSubordinants = getSubordinantsNames(hierarchie_typu, widgetyAddPart['vyber_typ'].value, onlynames=True,descendants=[])
+    boxesSubordinants = getSubordinantsNames(hierarchie_typu, typ, onlynames=True,descendants=[])
 
     def createTable(type):
         root = gui.TableCellData(headers=[{'text': 'Part'}, {'text': 'Position'}])
@@ -319,7 +323,6 @@ def SetCompatibilityGUI():
 
 
     global compatibilityGuiFrame
-    global dialogAddPart
 
     cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
     confirm = gui.Button('Confirm')
@@ -368,7 +371,7 @@ def AddPartGUI():
             gui2.tellUser("Path is not valid. The file does not exist.")
             return
 
-        SetCompatibilityGUI()
+        SetCompatibilityGUI(widgetyAddPart['vyber_typ'].value)
 
     close = gui.Button('Close', command=onCloseAddPartGUI)
     add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)
@@ -388,6 +391,86 @@ def AddPartGUI():
     dialogAddPart.setButtonVisibile('ok', False)
     dialogAddPart.setButtonVisibile('cancel', False)
     dialogAddPart.show(width=600, height=80)
+
+def EditPartGUI():
+    global widgetyEditPart
+
+    def onSelectedTypeOriginal():
+        widgetyEditPart['vyber_typ_new'].set(widgetyEditPart['vyber_typ_original'].get())
+        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, only_names=True))
+        widgetyEditPart['vyber_nazev_new'].set(widgetyEditPart['vyber_nazev_original'].get())
+        widgetyEditPart['vyber_cesta_new'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()))
+
+    def onSelectedNameOriginal():
+        widgetyEditPart['vyber_nazev_new'].set(widgetyEditPart['vyber_nazev_original'].get())
+        widgetyEditPart['vyber_cesta_new'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()))
+
+
+    widgetyEditPart['label_typ_original'] = gui.Label(text="Original type of part:")
+    widgetyEditPart['vyber_typ_original'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_original", command=onSelectedTypeOriginal)
+
+    widgetyEditPart['label_nazev_original'] = gui.Label(text="Original name of part:")
+    widgetyEditPart['vyber_nazev_original'] = gui2.ComboBox(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, only_names=True), name="vyber_typ_original", command=onSelectedNameOriginal)
+
+    widgetyEditPart['label_typ_new'] = gui.Label(text="New type of part:")
+    widgetyEditPart['vyber_typ_new'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_new")
+
+    widgetyEditPart['label_nazev_new'] = gui.Label(text="New name of part:")
+    widgetyEditPart['vyber_nazev_new'] = gui.LineEdit(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value)[1][1])
+
+    widgetyEditPart['label_cesta_new'] = gui.Label(text="New path to part:")
+    widgetyEditPart['vyber_cesta_new'] = gui.OpenFileEntry(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()), placeholdertext="Path to File")
+
+
+    # Method called on clicking 'Close'.
+    def onCloseEditPartGUI(event):
+        global dialogEditPart
+        dialogEditPart.Hide()
+        dialogEditPart = gui.Dialog(caption  = "Edit Part")
+
+    def onResetEditPartGUI(event):
+        widgetyEditPart['vyber_nazev_original'].value = ""
+        widgetyEditPart['vyber_typ_original'].value = ""
+        widgetyEditPart['vyber_typ_new'].value = ""
+        widgetyEditPart['vyber_nazev_new'].value = ""
+        widgetyEditPart['vyber_cesta_new'].value = ""
+
+    def checkNotEmpty():
+        if widgetyEditPart['vyber_nazev_new'].value in najdi_vsechny_party():
+            if widgetyEditPart['vyber_nazev_original'].value != widgetyEditPart['vyber_nazev_new'].value:
+                gui2.tellUser("New name of part is not unique")
+                return
+        if not os.path.isfile(widgetyEditPart['vyber_cesta_new'].value):
+            gui2.tellUser("Path is not valid. The file does not exist.")
+            return
+
+        SetCompatibilityGUI(widgetyEditPart['vyber_typ_new'].value)
+
+    close = gui.Button('Close', command=onCloseEditPartGUI)
+    add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)
+    reset = gui.Button('Reset', command=onResetEditPartGUI)
+
+    upperFrame = gui.HFrame(
+		(5),
+        (widgetyEditPart['label_typ_original'], 5, widgetyEditPart['vyber_typ_original'], 50),
+        (widgetyEditPart['label_nazev_original'], 5, widgetyEditPart['vyber_nazev_original'], 50),
+        (230)
+
+	)
+    middleFrame = gui.HFrame(
+        (widgetyEditPart['label_typ_new'], 5, widgetyEditPart['vyber_typ_new'], 50),
+        (widgetyEditPart['label_nazev_new'], 5, widgetyEditPart['vyber_nazev_new'], 50),
+        (widgetyEditPart['label_cesta_new'], 5, widgetyEditPart['vyber_cesta_new'], 50),
+    )
+
+    lowerFrame = gui.HFrame(100, add, reset, close)
+
+    dialogEditPart.recess().add(upperFrame)
+    dialogEditPart.recess().add(middleFrame)
+    dialogEditPart.recess().add(lowerFrame)
+    dialogEditPart.setButtonVisibile('ok', False)
+    dialogEditPart.setButtonVisibile('cancel', False)
+    dialogEditPart.show(width=600, height=80)
 
 
         
