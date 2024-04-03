@@ -8,6 +8,7 @@ from functools import partial
 import csv
 import yaml
 import os.path
+import pandas as pd
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
@@ -17,7 +18,8 @@ dialogSetCompatibility = gui.Dialog(caption  = "Set compatibility")
 dialogModelBuildup = gui.Dialog(caption  = "Bus model buildup")
 dialogAddPart = gui.Dialog(caption  = "Add Part")
 dialogEditPart = gui.Dialog(caption  = "Edit Part")
-csv_file = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
+parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=0, header=0)
+print(parts)
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchie_typu = yaml.safe_load(file)
@@ -76,75 +78,64 @@ def getSubordinantsNames(hierarchie_typu, node_name, onlynames=False, descendant
     return descendants
 
 
-def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False):
+def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, removeEmpty = False):
     kompatibilni_radky = [("---", "---")]
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        header = next(reader)  # uloží hlavicku
+    if removeEmpty: kompatibilni_radky = []
+    try:
+        sloupec = parts.columns.get_loc(hledany_sloupec)
+        print(sloupec)
+    except KeyError:
+        return []
 
-        try:
-            sloupec = header.index(hledany_sloupec)
-        except:
-            return []
+    for index, row in parts.iterrows():
+        print(row.iloc[0])
+        if row.iloc[0] == pozadovany_typ and row.iloc[sloupec] != '0' and not pd.isnull(row.iloc[sloupec]):
+            kompatibilni_radky.append((row.iloc[1], row.name))
 
-        for row in reader:
-            if row[1] == pozadovany_typ and row[sloupec] != '0' and row[sloupec] is not None:
-                kompatibilni_radky.append((row[2], row[0]))  # pridá obsah prvního a tretího sloupce
-    if only_names : kompatibilni_radky = [item[1] for item in kompatibilni_radky[1:]]
+    if only_names:
+        kompatibilni_radky = [item[1] for item in kompatibilni_radky]
+
+    print("kompatibilni_radky: " + str(kompatibilni_radky))
     return kompatibilni_radky
 
 def najdi_cestu(hledany_komponent):
     cesta = "Nenalezeno"
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        next(reader)  # preskoc hlavicku
-
-        for row in reader:
-            if row[0] == hledany_komponent:
-                cesta = row[2]
+    for index, row in parts.iterrows():
+        if row.index == hledany_komponent:
+            cesta = row.iloc[1]
+            break
     return cesta
 
 def najdi_vsechny_daneho_typu(hledany_typ, only_names=False):
     vsechny = [("---", "---")]
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        next(reader)  # preskoc hlavicku
-
-        for row in reader:
-            if row[1] == hledany_typ:
-                vsechny.append((row[2], row[0]))  # pridá obsah prvního a tretího sloupce
-
-    if only_names : vsechny = [item[1] for item in vsechny[1:]]
+    for index, row in parts.iterrows():
+        if row.iloc[0] == hledany_typ:
+            vsechny.append((row.iloc[1], index))  # přidá obsah druhého a prvního sloupce
+    if only_names:
+        vsechny = [item[1] for item in vsechny[1:]]
+    print("Vsechny daneho typu: " + str(vsechny))
     return vsechny
 
 def najdi_vsechny_party():
     vsechny_party = []
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        next(reader)  # preskoc hlavicku
-        for row in reader:
-            vsechny_party.append(row[0])  # pridá obsah prvního a tretího sloupce
+    for index, row in parts.iterrows():
+        vsechny_party.append(index)  # přidá obsah prvního sloupce
     return vsechny_party
 
 def najdiLabelPodleCesty(cesta):
     label = "Nenalezeno"
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        next(reader)  # preskoc hlavicku
-
-        for row in reader:
-            if row[2] == cesta:
-                label = row[0]
+    for index, row in parts.iterrows():
+        if row.iloc[1] == cesta:
+            label = row.name
+            break
     return label
 
 def zjistiTypPodleCesty(cesta):
-    with open(csv_file, newline='') as file:
-        reader = csv.reader(file)
-        next(reader)  # preskoc hlavicku
-
-        for row in reader:
-            if row[2] == cesta:
-                typ = row[1]  # pridá obsah prvního a tretího sloupce
+    typ = None
+    for index, row in parts.iterrows():
+        if row.iloc[1] == cesta:
+            typ = row.iloc[0]  # přidá obsah prvního sloupce
+            break
     return typ
 
 def updateLabelyCest():
@@ -156,7 +147,8 @@ def updateLabelyCest():
 
 def onSelectedCombo(event):
     widgetyBuildup[f'cesta_{event.widget.name}'].text = widgetyBuildup[f'vyber_{event.widget.name}'].value
-    subordinants = getSubordinantsNames(hierarchie_typu, event.widget.name,[])
+    subordinants = getSubordinantsNames(hierarchie_typu, event.widget.name,onlynames=False, descendants=[])
+    print("Subordinants: "+str(subordinants))
     for [typ, multiselection] in subordinants:
         if widgetyBuildup[f'vyber_{event.widget.name}'].value == "---":
             if najit_prvek_podle_hodnoty(hierarchie_typu, event.widget.name).get("skippable",False):
@@ -165,7 +157,7 @@ def onSelectedCombo(event):
                     widgetyBuildup["vyber_" + typ].clear()
                     widgetyBuildup["vyber_" + typ].append(
                         najdi_kompatibilni_radky(najdiLabelPodleCesty(widgetyBuildup[f'vyber_{parent["name"]}'].value),
-                                                 typ),True)
+                                                 typ),only_names=True,removeEmpty=True)
                 else:
                     widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(widgetyBuildup[f'vyber_{parent["name"]}'].value), typ, True))
             else:
@@ -177,7 +169,7 @@ def onSelectedCombo(event):
         else:
             if multiselection:
                 widgetyBuildup["vyber_" + typ].clear()
-                widgetyBuildup["vyber_" + typ].append(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ, True))
+                widgetyBuildup["vyber_" + typ].append(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ,only_names=True,removeEmpty=True))
             else:
                 widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ))
                 widgetyBuildup[f'cesta_{typ}'].text = widgetyBuildup[f'vyber_{typ}'].value

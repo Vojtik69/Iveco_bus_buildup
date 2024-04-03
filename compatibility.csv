@@ -1,4 +1,4 @@
-,,,middle1,middle2,middle3,rear11,rear12,rear21,rear22,rear23,rear31,front11,front12,front21,front22,front23,front31,zrcatka1,zrcatka2,zrcatka3,palubka1,palubka2,zabradli1,zabradli2,nastrechu1,nastrechu2,prodluzovaci11,prodluzovaci12
+,type,path,middle1,middle2,middle3,rear11,rear12,rear21,rear22,rear23,rear31,front11,front12,front21,front22,front23,front31,zrcatka1,zrcatka2,zrcatka3,palubka1,palubka2,zabradli1,zabradli2,nastrechu1,nastrechu2,prodluzovaci11,prodluzovaci12
 middle1,middle,C:/middle1.inc,,,,1,1,0,0,0,0,1,1,0,0,0,0,,,,,,,,1,1,1,1
 middle2,middle,C:/middle2.inc,,,,0,0,1,1,1,0,0,0,1,1,1,0,,,,,,,,1,1,0,0
 middle3,middle,C:/middle3.inc,,,,0,0,0,0,0,1,0,0,0,0,0,1,,,,,,,,1,1,0,0
