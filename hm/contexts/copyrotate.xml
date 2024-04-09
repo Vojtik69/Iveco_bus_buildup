@@ -1,0 +1,34 @@
+<root>
+    <context tag="CopyRotateCtx">
+        <guidebar tag="gb">
+            <item tag="options" image="fdmTextToolbarDropdownStrip-16.png" indicator="hide">
+                <popup tag="pp">
+                    <options tag="op">
+                        <item tag="dir" label="Rotation Direction" type="combobox" default="X-axis" values="X-axis Y-axis Z-axis Vector {N1,N2,N3}" setcommand="hwctx setrotdir %V"/>
+                        <item tag="coord" label="Coordinate System" type="combobox" default="Global" values="Local Global" setcommand="hwctx setcoordoption %V" followupdatecommand=""/>
+                        <item tag="coord" label="Element Duplication" type="combobox" default="Original" values="Current Original" setcommand="hwctx setelemdup %V"/>
+                        <item tag="rotmag" label="Rotation Magnitude:" type="real" default="50.0" state="normal" setcommand="hwctx setrotmag %V" />
+                        <item tag="rotnum" label="Rotation Number" type="int" default ="5" state="normal" setcommand="hwctx setnumrot %V" />
+                    </options>
+                </popup>
+            </item>
+            <item tag="elemsel" type="entityselector" defaultentity="Elements" selectionname="ElemSel"
+                  syncwithbrowser="true" hmselectionmode="append" entitytypes="Elements"/>
+            <item tag="syssel" type="entityselector" defaultentity="Systems" selectionname="SystemSel"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Systems" visible ="false"/>
+            <item tag="basenodesel" type="entityselector" defaultentity="Nodes" selectionname="BaseNode" selectorlabel="Base Node"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Nodes"/>
+            <item tag="vecsel" type="entityselector" defaultentity="Vector" selectionname="VecSel"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Vector" visible ="false"/>
+            <item tag="n1" type="entityselector" defaultentity="Nodes" selectionname="N1" selectorlabel="N1"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Nodes" visible ="false"/>
+            <item tag="n2" type="entityselector" defaultentity="Nodes" selectionname="N2" selectorlabel="N2"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Nodes" visible ="false"/>
+            <item tag="n3" type="entityselector" defaultentity="Nodes" selectionname="N3" selectorlabel="N3"
+                  syncwithbrowser="true" selectmode="single" entitytypes="Nodes" visible ="false"/>
+            <item tag="proceed" image="toolbarActionApplyStrip-16.png" command="hwctx proceed"/>
+            <item tag="ok" image="toolbarActionOKStrip-16.png" command="hwctx ok"/>
+            <item tag="cancel" image="toolbarActionCancelStrip-16.png" command="hwctx cancel"/>
+        </guidebar>
+    </context>
+</root>

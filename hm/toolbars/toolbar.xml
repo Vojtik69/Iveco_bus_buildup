@@ -1,0 +1,10 @@
+<root>
+    <actionlist>
+ 		<action tag="Ext_Toolbar_HM_Screenshot1" tooltip="Save image to clipboard" image="save_to_clipboard_toolbar.png" command="tcl: ::ExtensionDemoHM::ToClipboardHM"/>
+        <action tag="Ext_Toolbar_HM_Screenshot2" tooltip="Save image to file" image="save_to_file_toolbar.png" command="tcl: ::ExtensionDemoHM::ToFileHM"/>
+    </actionlist>
+	<toolbar tag="Ext_Toolbar_HM" location="left">
+		<item actiontag="Ext_Toolbar_HM_Screenshot1"/>
+		<item actiontag="Ext_Toolbar_HM_Screenshot2"/>
+	</toolbar>
+</root>
