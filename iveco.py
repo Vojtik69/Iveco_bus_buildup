@@ -210,6 +210,7 @@ def ModelBuildupGUI():
     reset  = gui.Button('Reset', command=onResetModelBuildup)
     add =    gui.Button('Add Part', command=AddPartGUI)
     edit =   gui.Button('Edit Part', command=EditPartGUI)
+    solver = gui2.ComboBox(["OptiStruct", "Radioss"], name="solver", width=150)
 
     # Vytvoř widgetyBuildup
     for [typ,multiselection] in extractAllNames(hierarchie_typu):
@@ -232,7 +233,7 @@ def ModelBuildupGUI():
 
     # Napolohuj Widgety
     mainFrame = gui.VFrame (
-                (350, widgetyBuildup['label_na_strechu'], 300, add, edit),
+                (solver, 300, widgetyBuildup['label_na_strechu'], 300, add, edit),
                 (350, widgetyBuildup['vyber_na_strechu'], 350),
                 (900, widgetyBuildup['label_front_accessories']),
                 (150, obrazek, 10, widgetyBuildup['vyber_front_accessories']),
