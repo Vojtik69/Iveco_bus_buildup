@@ -69,9 +69,9 @@ def findParent(data, target_name, parent=None):
                 return result
 
 def getSubordinantsNames(hierarchie_typu, node_name, onlynames=False, descendants=[]):
-    print(node_name)
+    # print(node_name)
     node = najit_prvek_podle_hodnoty(hierarchie_typu, node_name)
-    print(node)
+    # print(node)
     try:
         for subordinate in node['subordinates']:
             if onlynames:
@@ -89,13 +89,13 @@ def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, 
     if removeEmpty: kompatibilni_radky = []
     try:
         sloupec = parts.columns.get_loc(hledany_sloupec)
-        print(sloupec)
+        # print(sloupec)
     except KeyError:
         return []
 
     for index, row in parts.iterrows():
-        print(row.iloc[0])
-        if row.iloc[0] == pozadovany_typ and row.iloc[sloupec] != '0' and not pd.isnull(row.iloc[sloupec]):
+
+        if row.iloc[0] == pozadovany_typ and row.iloc[sloupec] != 0 and not pd.isnull(row.iloc[sloupec]):
             kompatibilni_radky.append((row.iloc[1], row.name))
 
     if only_names:
@@ -107,7 +107,7 @@ def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, 
 def najdi_cestu(hledany_komponent):
     cesta = "Nenalezeno"
     for index, row in parts.iterrows():
-        if (row.index == hledany_komponent).any():
+        if (row.index == hledany_komponent):
             cesta = row.iloc[1]
             break
     return cesta
