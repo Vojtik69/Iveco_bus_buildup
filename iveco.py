@@ -25,6 +25,8 @@ dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 dialogAddPart = gui.Dialog(caption="Add Part")
 dialogEditPart = gui.Dialog(caption="Edit Part")
 
+selectedSolver="OptiStruct"
+
 def mainFunc(*args,**kwargs):
     ModelBuildupGUI()
     print("Initiated...")
@@ -85,7 +87,7 @@ def getSubordinantsNames(hierarchie_typu, node_name, onlynames=False, descendant
 
 
 def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, removeEmpty = False):
-    kompatibilni_radky = [("---", "---")]
+    kompatibilni_radky = [("---","---")]
     if removeEmpty: kompatibilni_radky = []
     try:
         sloupec = parts.columns.get_loc(hledany_sloupec)
@@ -106,20 +108,22 @@ def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, 
 
 def najdi_cestu(hledany_komponent):
     cesta = "Nenalezeno"
+    if hledany_komponent == "---":
+        return "---"
     for index, row in parts.iterrows():
-        if (row.index == hledany_komponent):
-            cesta = row.iloc[1]
+        print(str(index))
+
+        if (str(index) == hledany_komponent):
+            cesta = row.iloc[1] if selectedSolver=="OptiStruct" else row.iloc[2]
             break
     return cesta
 
-def najdi_vsechny_daneho_typu(hledany_typ, only_names=False):
-    vsechny = [("---", "---")]
+def najdi_vsechny_daneho_typu(hledany_typ, removeEmpty=False):
+    vsechny = ["---"]
+    if removeEmpty: vsechny = []
     for index, row in parts.iterrows():
         if row.iloc[0] == hledany_typ:
-            vsechny.append((row.iloc[1], index))  # přidá obsah druhého a prvního sloupce
-    if only_names:
-        vsechny = [item[1] for item in vsechny[1:]]
-    print("Vsechny daneho typu: " + str(vsechny))
+            vsechny.append(index)  # přidá obsah druhého a prvního sloupce
     return vsechny
 
 def najdi_vsechny_party():
@@ -147,12 +151,13 @@ def zjistiTypPodleCesty(cesta):
 def updateLabelyCest():
     for [typ,multiselection] in extractAllNames(hierarchie_typu):
         try:
-            widgetyBuildup[f'cesta_{typ}'].text = widgetyBuildup[f'vyber_{typ}'].value
+            widgetyBuildup[f'cesta_{typ}'].text = najdi_cestu(widgetyBuildup[f'vyber_{typ}'].value)
         except:
             pass
 
 def onSelectedCombo(event):
-    widgetyBuildup[f'cesta_{event.widget.name}'].text = widgetyBuildup[f'vyber_{event.widget.name}'].value
+    print(event.widget.value)
+    widgetyBuildup[f'cesta_{event.widget.name}'].text = najdi_cestu(event.widget.value)
     subordinants = getSubordinantsNames(hierarchie_typu, event.widget.name,onlynames=False, descendants=[])
     print("Subordinants: "+str(subordinants))
     for [typ, multiselection] in subordinants:
@@ -162,23 +167,28 @@ def onSelectedCombo(event):
                 if multiselection:
                     widgetyBuildup["vyber_" + typ].clear()
                     widgetyBuildup["vyber_" + typ].append(
-                        najdi_kompatibilni_radky(najdiLabelPodleCesty(widgetyBuildup[f'vyber_{parent["name"]}'].value),
+                        najdi_kompatibilni_radky(widgetyBuildup[f'vyber_{parent["name"]}'].value,
                                                  typ),only_names=True,removeEmpty=True)
                 else:
-                    widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(widgetyBuildup[f'vyber_{parent["name"]}'].value), typ, True))
+                    widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(widgetyBuildup[f'vyber_{parent["name"]}'].value, typ, only_names=True, removeEmpty = False))
             else:
                 if multiselection:
                     widgetyBuildup["vyber_" + typ].clear()
-                    widgetyBuildup["vyber_" + typ].append(najdi_vsechny_daneho_typu(typ))
+                    widgetyBuildup["vyber_" + typ].append(najdi_vsechny_daneho_typu(typ,removeEmpty=True))
                 else:
-                    widgetyBuildup["vyber_" + typ].setValues(najdi_vsechny_daneho_typu(typ))
+                    widgetyBuildup["vyber_" + typ].setValues(najdi_vsechny_daneho_typu(typ,removeEmpty=False))
         else:
             if multiselection:
                 widgetyBuildup["vyber_" + typ].clear()
-                widgetyBuildup["vyber_" + typ].append(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ,only_names=True,removeEmpty=True))
+                widgetyBuildup["vyber_" + typ].append(najdi_kompatibilni_radky(event.value, typ,only_names=True,removeEmpty=True))
             else:
-                widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(najdiLabelPodleCesty(event.value), typ))
+                widgetyBuildup["vyber_" + typ].setValues(najdi_kompatibilni_radky(event.value, typ,only_names=True,removeEmpty=False))
                 widgetyBuildup[f'cesta_{typ}'].text = widgetyBuildup[f'vyber_{typ}'].value
+
+def solverChange(event):
+    global selectedSolver
+    selectedSolver = event.widget.value
+    updateLabelyCest()
 
 
 def ModelBuildupGUI():
@@ -210,7 +220,7 @@ def ModelBuildupGUI():
     reset  = gui.Button('Reset', command=onResetModelBuildup)
     add =    gui.Button('Add Part', command=AddPartGUI)
     edit =   gui.Button('Edit Part', command=EditPartGUI)
-    solver = gui2.ComboBox(["OptiStruct", "Radioss"], name="solver", width=150)
+    solver = gui2.ComboBox(["OptiStruct", "Radioss"], command=solverChange, name="solver", width=150)
 
     # Vytvoř widgetyBuildup
     for [typ,multiselection] in extractAllNames(hierarchie_typu):
@@ -223,7 +233,7 @@ def ModelBuildupGUI():
             widgetyBuildup[f'vyber_{typ}'] = vyber_objekt
         else:
             label_objekt = gui.Label(text=f'{typ.capitalize()}')
-            vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ), command=onSelectedCombo, name=typ)
+            vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ,removeEmpty=False), command=onSelectedCombo, name=typ)
             cesta_objekt = gui2.Label("---", font=dict(size=8, italic=True))
 
             # Uložení objektů do slovníku
