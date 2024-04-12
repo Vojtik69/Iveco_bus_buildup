@@ -290,7 +290,7 @@ def SetCompatibilityGUI(typ):
     def createTable(type):
         root = gui.TableCellData(headers=[{'text': 'Part'}, {'text': 'Position'}])
         row = 0
-        for part in najdi_vsechny_daneho_typu(type, only_names=True):
+        for part in najdi_vsechny_daneho_typu(type, removeEmpty=True):
             root.setData(row, 0, value=part, type='string', state='disabled')
             root.setData(row, 1, value='[,,]', type='string', state='enabled')
             row += 1
@@ -406,7 +406,7 @@ def EditPartGUI():
 
     def onSelectedTypeOriginal():
         widgetyEditPart['vyber_typ_new'].set(widgetyEditPart['vyber_typ_original'].get())
-        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, only_names=True))
+        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, removeEmpty=True))
         widgetyEditPart['vyber_nazev_new'].set(widgetyEditPart['vyber_nazev_original'].get())
         widgetyEditPart['vyber_cesta_new'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()))
 
@@ -419,13 +419,13 @@ def EditPartGUI():
     widgetyEditPart['vyber_typ_original'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_original", command=onSelectedTypeOriginal)
 
     widgetyEditPart['label_nazev_original'] = gui.Label(text="Original name of part:")
-    widgetyEditPart['vyber_nazev_original'] = gui2.ComboBox(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, only_names=True), name="vyber_typ_original", command=onSelectedNameOriginal)
+    widgetyEditPart['vyber_nazev_original'] = gui2.ComboBox(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, removeEmpty=True), name="vyber_typ_original", command=onSelectedNameOriginal)
 
     widgetyEditPart['label_typ_new'] = gui.Label(text="New type of part:")
     widgetyEditPart['vyber_typ_new'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_new")
 
     widgetyEditPart['label_nazev_new'] = gui.Label(text="New name of part:")
-    widgetyEditPart['vyber_nazev_new'] = gui.LineEdit(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value)[1][1])
+    widgetyEditPart['vyber_nazev_new'] = gui.LineEdit(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value)[1])
 
     widgetyEditPart['label_cesta_new'] = gui.Label(text="New path to part:")
     widgetyEditPart['vyber_cesta_new'] = gui.OpenFileEntry(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()), placeholdertext="Path to File")
