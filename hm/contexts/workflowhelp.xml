@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- -->
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+
+<task id="task_u4g_njs_vr" profileId="HmGeneralWfh">
+<!-- -->
+    <topic id="RenameEntityCtx">
+        <shortmessage>
+            <ph id="wh_RenameEntity_sm">Rename Components</ph>
+        </shortmessage>
+        <longmessage>
+            <ph id="wh_RenameEntity_lm">
+Renames selected entities by prefixing with a given string.
+            </ph>
+        </longmessage>
+    </topic>
+<!-- -->
+    <topic id="Coord3toCoord1Ctx">
+        <shortmessage>
+            <ph id="wh_Coord3toCoord1Ctx_sm">Convert Coordinates</ph>
+        </shortmessage>
+    </topic>
+<!-- -->
+    <topic id="CopyTranslateCtx">
+        <shortmessage>
+            <ph id="wh_Translate_sm">Translate select elements</ph>
+        </shortmessage>
+        <longmessage>
+            <ph id="wh_Translate_lm">
+Translate a selection of elements multiple times along a global axis (X, Y, or Z) or define a local axis. 
+Choose a global axis or direction, or select a node and system to define a local coordinate system.
+            </ph>
+        </longmessage>
+        <subTopic id="Source">
+            <shortmessage>
+                <ph id="wh_TranslateCtx_sm_source">Select elements to translate</ph>
+            </shortmessage>
+            <longmessage>
+                <ph id="wh_TranslateCtx_lm_source">
+Translate a selection of elements multiple times along a global axis (X, Y, or Z) or define a local axis.
+Choose a global axis or direction, or select a node and system to define a local coordinate system.
+                </ph>
+            </longmessage>
+        </subTopic>
+        <subTopic id="Target">
+            <shortmessage>
+                <ph id="wh_TranslateCtx_sm_destination">Choose the magnitude, direction and number of copies to make.</ph>
+            </shortmessage>
+            <longmessage>
+                <ph id="wh_TranslateCtx_lm_destination">
+Translate a selection of elements multiple times along a global axis (X, Y, or Z) or define a local axis.
+Choose a global axis or direction, or select a node and system to define a local coordinate system.
+                </ph>
+            </longmessage>
+        </subTopic>
+    </topic>
+<!-- -->
+    <topic id="CopyRotateCtx">
+        <shortmessage>
+            <ph id="wh_Rotate_sm">Rotate select elements</ph>
+        </shortmessage>
+        <longmessage>
+            <ph id="wh_Rotate_lm">
+Rotate a selection of elements multiple times along a global axis (X, Y, or Z) or define a local axis.
+Choose a global axis or direction, or select a node and system to define a local coordinate system.
+            </ph>
+        </longmessage>
+    </topic>
+<!-- -->
+	<topic id="RefineHAZCtx">
+        <shortmessage>
+            <ph id="wh_RefineHAZ_sm">Refine HAZ elements</ph>
+        </shortmessage>
+        <longmessage>
+            <ph id="wh_RefineHAZ_lm">
+Refines elements in heat affected zone around seam welds.
+            </ph>
+        </longmessage>
+    </topic>
+</task>
