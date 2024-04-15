@@ -354,8 +354,11 @@ def AddPartGUI():
     widgetyAddPart['label_typ'] = gui.Label(text="Type of new part:")
     widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ")
 
-    widgetyAddPart['label_cesta'] = gui.Label(text="Path to part:")
-    widgetyAddPart['vyber_cesta'] = gui.OpenFileEntry(placeholdertext="Path to File")
+    widgetyAddPart['label_cesta_OptiStruct'] = gui.Label(text="Path to OptiStruct:")
+    widgetyAddPart['vyber_cesta_OptiStruct'] = gui.OpenFileEntry(placeholdertext="Path to OptiStruct")
+
+    widgetyAddPart['label_cesta_Radioss'] = gui.Label(text="Path to Radioss:")
+    widgetyAddPart['vyber_cesta_Radioss'] = gui.OpenFileEntry(placeholdertext="Path to Radioss")
 
     widgetyAddPart['label_nazev'] = gui.Label(text="Name of new part:")
     widgetyAddPart['vyber_nazev'] = gui.LineEdit()
@@ -369,16 +372,25 @@ def AddPartGUI():
 
     def onResetAddPartGUI(event):
         widgetyAddPart['vyber_nazev'].value = ""
-        widgetyAddPart['vyber_cesta'].value = ""
+        widgetyAddPart['vyber_cesta_OptiStruct'].value = ""
+        widgetyAddPart['vyber_cesta_Radioss'].value = ""
         widgetyAddPart['vyber_typ'].value = ""
 
     def checkNotEmpty():
         if widgetyAddPart['vyber_nazev'].value in najdi_vsechny_party():
             gui2.tellUser("Name of new part is not unique")
             return
-        if not os.path.isfile(widgetyAddPart['vyber_cesta'].value):
-            gui2.tellUser("Path is not valid. The file does not exist.")
+
+        if widgetyAddPart['vyber_cesta_OptiStruct'].value == "" and widgetyAddPart['vyber_cesta_Radioss'].value == "":
+            gui2.tellUser("Paths to files are both empty.")
             return
+        else:
+            if widgetyAddPart['vyber_cesta_OptiStruct'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_OptiStruct'].value):
+                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
+                return
+            if widgetyAddPart['vyber_cesta_Radioss'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_Radioss'].value):
+                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
+                return
 
         SetCompatibilityGUI(widgetyAddPart['vyber_typ'].value)
 
@@ -388,9 +400,10 @@ def AddPartGUI():
 
     upperFrame = gui.HFrame(
         (5),
-        (widgetyAddPart['label_nazev'], 5, widgetyAddPart['vyber_nazev'], 50),
-        (widgetyAddPart['label_cesta'], 5, widgetyAddPart['vyber_cesta'], 50),
-        (widgetyAddPart['label_typ'], 5, widgetyAddPart['vyber_typ'], 50),
+        (widgetyAddPart['label_nazev'], 5, widgetyAddPart['vyber_nazev'], 10, widgetyAddPart['label_cesta_OptiStruct'], widgetyAddPart['vyber_cesta_OptiStruct'], 20),
+        (widgetyAddPart['label_typ'], 5, widgetyAddPart['vyber_typ'], 10, widgetyAddPart['label_cesta_Radioss'], widgetyAddPart['vyber_cesta_Radioss'], 20),
+        (10),
+        (),
     )
 
     lowerFrame = gui.HFrame(100, add, reset, close)
@@ -400,6 +413,7 @@ def AddPartGUI():
     dialogAddPart.setButtonVisibile('ok', False)
     dialogAddPart.setButtonVisibile('cancel', False)
     dialogAddPart.show(width=600, height=80)
+    print(widgetyAddPart['vyber_cesta_OptiStruct'].value)
 
 def EditPartGUI():
     global widgetyEditPart
