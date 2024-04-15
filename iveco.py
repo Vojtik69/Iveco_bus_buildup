@@ -106,15 +106,17 @@ def najdi_kompatibilni_radky(hledany_sloupec, pozadovany_typ, only_names=False, 
     print("kompatibilni_radky: " + str(kompatibilni_radky))
     return kompatibilni_radky
 
-def najdi_cestu(hledany_komponent):
+def najdi_cestu(hledany_komponent, solver=None):
     cesta = "Nenalezeno"
+    if not solver:
+        solver=selectedSolver
     if hledany_komponent == "---":
         return "---"
     for index, row in parts.iterrows():
         print(str(index))
 
         if (str(index) == hledany_komponent):
-            cesta = row.iloc[1] if selectedSolver=="OptiStruct" else row.iloc[2]
+            cesta = row.iloc[1] if solver=="OptiStruct" else row.iloc[2]
             break
     return cesta
 
@@ -403,7 +405,6 @@ def AddPartGUI():
         (widgetyAddPart['label_nazev'], 5, widgetyAddPart['vyber_nazev'], 10, widgetyAddPart['label_cesta_OptiStruct'], widgetyAddPart['vyber_cesta_OptiStruct'], 20),
         (widgetyAddPart['label_typ'], 5, widgetyAddPart['vyber_typ'], 10, widgetyAddPart['label_cesta_Radioss'], widgetyAddPart['vyber_cesta_Radioss'], 20),
         (10),
-        (),
     )
 
     lowerFrame = gui.HFrame(100, add, reset, close)
@@ -420,13 +421,15 @@ def EditPartGUI():
 
     def onSelectedTypeOriginal():
         widgetyEditPart['vyber_typ_new'].set(widgetyEditPart['vyber_typ_original'].get())
-        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, removeEmpty=True))
+        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].get(), removeEmpty=True))
         widgetyEditPart['vyber_nazev_new'].set(widgetyEditPart['vyber_nazev_original'].get())
-        widgetyEditPart['vyber_cesta_new'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()))
+        widgetyEditPart['vyber_cesta_new_OptiStruct'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(),solver="OptiStruct"))
+        widgetyEditPart['vyber_cesta_new_Radioss'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(), solver="Radioss"))
 
     def onSelectedNameOriginal():
         widgetyEditPart['vyber_nazev_new'].set(widgetyEditPart['vyber_nazev_original'].get())
-        widgetyEditPart['vyber_cesta_new'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()))
+        widgetyEditPart['vyber_cesta_new_OptiStruct'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(),solver="OptiStruct"))
+        widgetyEditPart['vyber_cesta_new_Radioss'].set(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(), solver="Radioss"))
 
 
     widgetyEditPart['label_typ_original'] = gui.Label(text="Original type of part:")
@@ -441,8 +444,11 @@ def EditPartGUI():
     widgetyEditPart['label_nazev_new'] = gui.Label(text="New name of part:")
     widgetyEditPart['vyber_nazev_new'] = gui.LineEdit(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value)[1])
 
-    widgetyEditPart['label_cesta_new'] = gui.Label(text="New path to part:")
-    widgetyEditPart['vyber_cesta_new'] = gui.OpenFileEntry(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get()), placeholdertext="Path to File")
+    widgetyEditPart['label_cesta_new_OptiStruct'] = gui.Label(text="New path to OptiStruct:")
+    widgetyEditPart['vyber_cesta_new_OptiStruct'] = gui.OpenFileEntry(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(),solver="OptiStruct"), placeholdertext="Path to OptiStruct")
+
+    widgetyEditPart['label_cesta_new_Radioss'] = gui.Label(text="New path to Radioss:")
+    widgetyEditPart['vyber_cesta_new_Radioss'] = gui.OpenFileEntry(najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(), solver="Radioss"), placeholdertext="Path to Radioss")
 
 
     # Method called on clicking 'Close'.
@@ -452,22 +458,35 @@ def EditPartGUI():
         dialogEditPart = gui.Dialog(caption  = "Edit Part")
 
     def onResetEditPartGUI(event):
-        widgetyEditPart['vyber_nazev_original'].value = ""
         widgetyEditPart['vyber_typ_original'].value = ""
-        widgetyEditPart['vyber_typ_new'].value = ""
-        widgetyEditPart['vyber_nazev_new'].value = ""
-        widgetyEditPart['vyber_cesta_new'].value = ""
+        widgetyEditPart['vyber_nazev_original'].setValues(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].get(), removeEmpty=True))
+        widgetyEditPart['vyber_typ_new'].value = widgetyEditPart['vyber_typ_original'].value
+        widgetyEditPart['vyber_nazev_new'].value = widgetyEditPart['vyber_nazev_original'].value
+        widgetyEditPart['vyber_cesta_new_OptiStruct'].value = najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(),solver="OptiStruct")
+        widgetyEditPart['vyber_cesta_new_Radioss'].value = najdi_cestu(widgetyEditPart['vyber_nazev_original'].get(), solver="Radioss")
 
     def checkNotEmpty():
         if widgetyEditPart['vyber_nazev_new'].value in najdi_vsechny_party():
             if widgetyEditPart['vyber_nazev_original'].value != widgetyEditPart['vyber_nazev_new'].value:
                 gui2.tellUser("New name of part is not unique")
                 return
-        if not os.path.isfile(widgetyEditPart['vyber_cesta_new'].value):
-            gui2.tellUser("Path is not valid. The file does not exist.")
+
+        if widgetyEditPart['vyber_cesta_new_OptiStruct'].value == "" and widgetyEditPart['vyber_cesta_new_Radioss'].value == "":
+            gui2.tellUser("Paths to files are both empty.")
             return
+        else:
+            if widgetyEditPart['vyber_cesta_new_OptiStruct'].value != "" and not os.path.isfile(
+                    widgetyEditPart['vyber_cesta_new_OptiStruct'].value):
+                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
+                return
+            if widgetyEditPart['vyber_cesta_new_Radioss'].value != "" and not os.path.isfile(
+                    widgetyEditPart['vyber_cesta_new_Radioss'].value):
+                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
+                return
 
         SetCompatibilityGUI(widgetyEditPart['vyber_typ_new'].value)
+
+
 
     close = gui.Button('Close', command=onCloseEditPartGUI)
     add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)
@@ -481,9 +500,8 @@ def EditPartGUI():
 
     )
     middleFrame = gui.HFrame(
-        (widgetyEditPart['label_typ_new'], 5, widgetyEditPart['vyber_typ_new'], 50),
-        (widgetyEditPart['label_nazev_new'], 5, widgetyEditPart['vyber_nazev_new'], 50),
-        (widgetyEditPart['label_cesta_new'], 5, widgetyEditPart['vyber_cesta_new'], 50),
+        (widgetyEditPart['label_typ_new'], 5, widgetyEditPart['vyber_typ_new'], 15, widgetyEditPart['label_cesta_new_OptiStruct'], 5, widgetyEditPart['vyber_cesta_new_OptiStruct'], 30),
+        (widgetyEditPart['label_nazev_new'], 5, widgetyEditPart['vyber_nazev_new'],  15, widgetyEditPart['label_cesta_new_Radioss'], 5, widgetyEditPart['vyber_cesta_new_Radioss'], 30)
     )
 
     lowerFrame = gui.HFrame(100, add, reset, close)
