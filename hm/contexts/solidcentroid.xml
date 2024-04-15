@@ -1,0 +1,9 @@
+<root>
+    <context tag="SolidCentroidCtx">
+        <guidebar tag="gb">
+			<item tag="solidsel" type="entityselector" selectionname="SolidSel" entitytypes="Solids" hmselectionmode="append"/>
+			<item tag="next" image="toolbarActionApplyStrip-16.png" command="hwctx proceed" />
+            <item tag="ok" image="toolbarActionOKStrip-16.png" command="hwctx ok"/>
+        </guidebar>
+    </context>
+</root>

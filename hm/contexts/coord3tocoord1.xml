@@ -1,0 +1,9 @@
+<root>
+    <context tag="Coord3toCoord1Ctx">
+        <guidebar tag="gb">
+            <item tag="syssel" type="entityselector" defaultentity="Systems" selectionname="SystemSel" syncwithbrowser="true" hmselectionmode="append" entitytypes="Systems"/>
+            <item tag="rename_label" image="toolbarActionApplyStrip-16.png" command="hwctx proceed"/>
+            <item tag="ok" image="toolbarActionOKStrip-16.png" command="hwctx ok"/>
+        </guidebar>
+    </context>
+</root>
