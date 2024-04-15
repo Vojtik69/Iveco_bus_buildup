@@ -494,8 +494,8 @@ def EditPartGUI():
 
     upperFrame = gui.HFrame(
         (5),
-        (widgetyEditPart['label_typ_original'], 5, widgetyEditPart['vyber_typ_original'], 50),
-        (widgetyEditPart['label_nazev_original'], 5, widgetyEditPart['vyber_nazev_original'], 50),
+        (widgetyEditPart['label_typ_original'], 5, widgetyEditPart['vyber_typ_original']),
+        (widgetyEditPart['label_nazev_original'], 5, widgetyEditPart['vyber_nazev_original']),
         (230)
 
     )
@@ -505,8 +505,10 @@ def EditPartGUI():
     )
 
     lowerFrame = gui.HFrame(100, add, reset, close)
+    sep = gui.Separator(orientation='horizontal', spacing='15')
 
     dialogEditPart.recess().add(upperFrame)
+    dialogEditPart.recess().add(sep)
     dialogEditPart.recess().add(middleFrame)
     dialogEditPart.recess().add(lowerFrame)
     dialogEditPart.setButtonVisibile('ok', False)
