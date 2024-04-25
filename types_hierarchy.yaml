@@ -1,21 +1,85 @@
-- name: middle
-  skippable: False
-  multiselection: False
-  subordinates:
-    - name: na_strechu
-      skippable: False
-      multiselection: False
-    - name: front
-      skippable: False
-      multiselection: False
-      subordinates:
-        - name: front_accessories
-          skippable: False
-          multiselection: True
-    - name: prodluzovaci
-      skippable: True
-      multiselection: False
-      subordinates:
-        - name: rear
-          skippable: False
-          multiselection: False
+groups:
+  headers:
+      - name: Vehicle Type
+      - name: Power Unit Type
+      - name: Length
+  FT groups:
+      - name: Chassis Structure Assembly
+        skippable: True
+        FTs:
+          - name: FT 1 Lorem ipsum
+            skippable: False
+            multiselection: False
+          - name: FT 2
+            skippable: False
+            multiselection: False
+          - name: FT 3
+            skippable: False
+            multiselection: False
+        groups:
+          - name: Chassis Equipment
+            skippable: False
+            FTs:
+              - name: FT 4
+                skippable: False
+                multiselection: False
+              - name: FT 5
+                skippable: False
+                multiselection: False
+              - name: FT 6
+                skippable: False
+                multiselection: False
+              - name: FT 5-1
+                skippable: False
+                multiselection: False
+              - name: FT 6-1
+                skippable: False
+                multiselection: False
+              - name: Chassis Others
+                skippable: False
+                multiselection: True
+
+      - name: Left Lateral Structure Assembly
+        skippable: True
+        FTs:
+          - name: FT 7 Lorem ipsum
+            skippable: False
+            multiselection: False
+          - name: FT 7-1 Lorem ipsum
+            skippable: False
+            multiselection: False
+          - name: FT 8
+            skippable: False
+            multiselection: False
+          - name: FT 9
+            skippable: False
+            multiselection: False
+        groups:
+          - name: Left Lateral Equipment
+            skippable: False
+            FTs:
+              - name: FT 10
+                skippable: False
+                multiselection: False
+              - name: FT 11
+                skippable: False
+                multiselection: False
+              - name: FT 12
+                skippable: False
+                multiselection: False
+              - name: Left Lateral Others
+                skippable: False
+                multiselection: True
+      - name: Right Lateral Structure Assembly
+        skippable: True
+        FTs:
+          - name: FT 13
+            skippable: False
+            multiselection: False
+        groups:
+          - name: Right Lateral Equipment
+            skippable: False
+            FTs:
+              - name: Right Lateral Others
+                skippable: False
+                multiselection: True
