@@ -34,7 +34,7 @@ def mainFunc(*args,**kwargs):
 
 def extractAllTypes(data, onlynames=False):
     names = []
-    # for item in data:
+    # for item in data_structure:
     #     if onlynames:
     #         names.append(item['name'])
     #     else:

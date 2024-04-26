@@ -18,7 +18,7 @@ groups:
             multiselection: False
         groups:
           - name: Chassis Equipment
-            skippable: False
+            skippable: True
             FTs:
               - name: FT 4
                 skippable: False
@@ -38,6 +38,17 @@ groups:
               - name: Chassis Others
                 skippable: False
                 multiselection: True
+            groups:
+              - name: Next group
+                skippable: False
+                FTs:
+                  - name: FT 44
+                    skippable: False
+                    multiselection: False
+                  - name: FT 55
+                    skippable: False
+                    multiselection: False
+
 
       - name: Left Lateral Structure Assembly
         skippable: True

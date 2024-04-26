@@ -35,11 +35,11 @@ def mainFunc(*args, **kwargs):
 
 def find_all_of_type(searched_type, remove_empty=False):
     all_of_type = ["---"]
-    print(searched_type)
+    # print(searched_type)
     if remove_empty:
         all_of_type = []
     for index, row in parts.iterrows():
-        print(index)
+        # print(index)
         if index == searched_type:
             all_of_type.append(row.iloc[0])
     return all_of_type
@@ -47,12 +47,59 @@ def find_all_of_type(searched_type, remove_empty=False):
 def onSelectedCombo():
     pass
 
-def get_widget_structure(structure, levelWidgets=[]):
+
+def find_path_to_name(data_structure, name, current_path=[]):
+    if isinstance(data_structure, list):
+        for index, item in enumerate(data_structure):
+            new_path = current_path + [index]
+            result = find_path_to_name(item, name, new_path)
+            if result is not None:
+                return result
+    elif isinstance(data_structure, dict):
+        for key, value in data_structure.items():
+            new_path = current_path + [key]
+            if key == "name" and value == name:
+                return new_path[:-1]
+            result = find_path_to_name(value, name, new_path)
+            if result is not None:
+                return result
+    return None
+
+
+def get_element_by_path(data_structure, path):
+    element = data_structure
+    try:
+        for key_or_index in path:
+            element = element[key_or_index]
+        return element
+    except (KeyError, IndexError):
+        return None
+
+
+def find_superiors(structure, target_ft):
+    related_fts = []
+
+    # Projdeme všechny skupiny
+    for group in structure['groups']['FT groups']:
+        for ft in group['FTs']:
+            # Projdeme všechny FTs
+            if ft['name'] == target_ft:
+                # Najdeme nadřazenou skupinu
+                for supergroup in structure['groups']['FT groups']:
+                    # Pokud nadřazená skupina obsahuje hledaný prvek FT
+                    if any(sub_ft['name'] == target_ft for sub_ft in supergroup['FTs']):
+                        # Projdeme všechny FTs z nadřazené skupiny
+                        for super_ft in supergroup['FTs']:
+                            if super_ft['name'] != target_ft:
+                                related_fts.append(super_ft['name'])
+                        return related_fts
+
+def get_widget_structure(structure, levelWidgets=[], offset=0):
     subgrouping = True if levelWidgets else False
     for index, level in enumerate(structure):
         label_group = gui.Label(text=level.get("name"), font={'bold': True})
         if subgrouping:
-            levelWidgets[-1].append([(10, label_group)])
+            levelWidgets[-1].append([(10, (offset*10, label_group))])
         else:
             levelWidgets.append([(label_group)])
         for ft in level.get("FTs", []):
@@ -67,20 +114,20 @@ def get_widget_structure(structure, levelWidgets=[]):
             widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyber_objekt
 
             levelWidgets[-1].append(
-                (widgetyBuildup[f'label_{ft.get("name", "")}'], 5, widgetyBuildup[f'vyber_{ft.get("name", "")}']))
+                (offset*10, widgetyBuildup[f'label_{ft.get("name", "")}'], 5, widgetyBuildup[f'vyber_{ft.get("name", "")}']))
         if level.get("groups"):
-            get_widget_structure(level['groups'], levelWidgets)
+            get_widget_structure(level['groups'], levelWidgets, offset=offset+1)
 
     return levelWidgets
 
 def get_widget_header_structure(structure, headerWidgets=[]):
     for header in structure:
-        label_objekt = gui.Label(text=header.get("name", ""))
+        label_objekt = gui.Label(text=header.get("name", ""), font={'bold': True})
 
         if header.get("multiselection", False):
             vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=header.get('name', ""))
         else:
-            vyber_objekt = gui2.ComboBox(find_all_of_type(header.get('name',""),remove_empty=False), command=onSelectedCombo, name=header.get('name',""))
+            vyber_objekt = gui2.ComboBox(get_values_for_header(header.get('name', ""), remove_empty=False), command=onSelectedCombo, name=header.get('name',""))
 
         widgetyBuildup[f'label_{header.get("name", "")}'] = label_objekt
         widgetyBuildup[f'vyber_{header.get("name", "")}'] = vyber_objekt
@@ -88,6 +135,12 @@ def get_widget_header_structure(structure, headerWidgets=[]):
         headerWidgets.append([[(widgetyBuildup[f'label_{header.get("name", "")}'],widgetyBuildup[f'vyber_{header.get("name", "")}'])]])
 
     return headerWidgets
+
+
+def get_values_for_header(header_type, remove_empty=False):
+    all_values = [] if remove_empty else ["---"]
+    all_values.extend(parts.iloc[1][parts.iloc[0] == header_type].tolist())
+    return all_values
 
 
 def solverChange(event):
@@ -127,7 +180,7 @@ def ModelBuildupGUI():
     reset = gui.Button('Reset', command=onResetModelBuildup)
     solver = gui2.ComboBox(["OptiStruct", "Radioss"], command=solverChange, name="solver", width=150)
 
-    header_frame = gui.HFrame(get_widget_header_structure(hierarchie_typu["groups"]["headers"]), container=True, maxwidth=300 )
+    header_frame = gui.HFrame(get_widget_header_structure(hierarchie_typu["groups"]["headers"]), container=True, maxwidth=500 )
 
     widget_frame = gui.HFrame(get_widget_structure(hierarchie_typu["groups"]["FT groups"]), container=True, )
     widget_frame.maxheight = widget_frame.reqheight
