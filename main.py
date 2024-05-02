@@ -11,8 +11,8 @@ import pandas as pd
 
 print("Initiating...")
 
-parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=0,
-                    header=0)
+parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=1,
+                    header=[0, 1, 2])
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchie_typu = yaml.safe_load(file)
 
@@ -25,7 +25,8 @@ dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 dialogAddPart = gui.Dialog(caption="Add Part")
 dialogEditPart = gui.Dialog(caption="Edit Part")
 
-selectedSolver = "OptiStruct"
+
+selectedSolver = 1 #1-optistruct, 2-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 
 
 def mainFunc(*args, **kwargs):
@@ -34,16 +35,30 @@ def mainFunc(*args, **kwargs):
 
 
 def find_all_of_type(searched_type, remove_empty=False):
+
     all_of_type = ["---"]
     # print(searched_type)
     if remove_empty:
         all_of_type = []
     for index, row in parts.iterrows():
         # print(index)
-        if index == searched_type:
-            all_of_type.append(row.iloc[0])
+        if row.iloc[0] == searched_type and not pd.isna(row.iloc[1]):
+            all_of_type.append(index)
     return all_of_type
 
+def update_subordinant_items(data_structure, name):
+    subordinants = find_subordinant_fts(data_structure, name)
+    for subordinant in subordinants:
+        # if it is multisielection ListBox
+        if type(widgetyBuildup[f'vyber_{subordinant}']) == gui2.ListBox.ListBox:
+            widgetyBuildup["vyber_" + subordinant].clear()
+            # TODO widgetyBuildup["vyber_" + subordinant].append(
+            # TODO najdi_kompatibilni_radky(event.value, typ, only_names=True, removeEmpty=True))
+        # if it is onlyselection Combo
+        else:
+            pass
+            # TODO widgetyBuildup["vyber_" + subordinant].setValues(
+            # TODO najdi_kompatibilni_radky(event.value, typ, only_names=True, removeEmpty=False))
 def onSelectedCombo():
     pass
 
@@ -76,23 +91,48 @@ def get_element_by_path(data_structure, path):
         return None
 
 
-def find_superiors(structure, target_ft):
-    related_fts = []
+def find_superordinant_fts(data_structure, name, superordinants = []):
+    path = find_path_to_name(data_structure, name)
 
-    # Projdeme všechny skupiny
-    for group in structure['groups']['FT groups']:
-        for ft in group['FTs']:
-            # Projdeme všechny FTs
-            if ft['name'] == target_ft:
-                # Najdeme nadřazenou skupinu
-                for supergroup in structure['groups']['FT groups']:
-                    # Pokud nadřazená skupina obsahuje hledaný prvek FT
-                    if any(sub_ft['name'] == target_ft for sub_ft in supergroup['FTs']):
-                        # Projdeme všechny FTs z nadřazené skupiny
-                        for super_ft in supergroup['FTs']:
-                            if super_ft['name'] != target_ft:
-                                related_fts.append(super_ft['name'])
-                        return related_fts
+    if path is None:
+        return superordinants
+
+    # if it first level under header, use header as superordinant
+    if path[-4] == "FT groups":
+        for header in get_element_by_path(data_structure, ["groups", "headers"]):
+            superordinants.append(header.get("name",""))
+        return superordinants
+
+    level_up = -4 if path[-2] == "FTs" else -2
+
+    path_level_up = path[:level_up]
+    superordinant_element = get_element_by_path(data_structure, path_level_up)
+    superordinant_name = get_element_by_path(data_structure, path_level_up[:-2]).get("name","")
+    for ft in superordinant_element.get("FTs", []):
+        superordinants.append(ft.get("name", ""))
+    if superordinant_element.get("skippable", False):
+        find_superordinant_fts(data_structure, superordinant_name, superordinants)
+
+    return superordinants
+
+def find_subordinant_fts(data_structure, name, subordinants = []):
+    path = find_path_to_name(data_structure, name)
+
+    if path is None:
+        return subordinants
+
+    level_up = -2 if path[-2] == "FTs" else None
+
+    superodinant_element = get_element_by_path(data_structure, path[:level_up])
+
+    for group in superodinant_element.get("groups", []):
+        for ft in group.get("FTs", []):
+            subordinants.append(ft.get("name",""))
+
+        if group.get("skippable", False):
+            find_subordinant_fts(data_structure, group.get("name", ""), subordinants)
+
+    return subordinants
 
 def get_widget_structure(structure, levelWidgets=[], offset=0):
     subgrouping = True if levelWidgets else False
@@ -137,6 +177,24 @@ def get_widget_header_structure(structure, headerWidgets=[]):
     return headerWidgets
 
 
+def find_compatible_parts(data_structure, name, removeEmpty = False):
+    compatibles = [] if removeEmpty else [("---", "---")]
+    superordinants = find_superordinant_fts(data_structure, name, superordinants=[])
+    all_of_type = find_all_of_type(name, remove_empty=True)
+
+    for part in all_of_type:
+        compatible = True
+        for superordinant in superordinants:
+            print(widgetyBuildup[f'vyber_{superordinant}'].get())
+            if pd.isna(parts.loc[part, [:, :, widgetyBuildup[f'vyber_{superordinant}'].get()]]):
+                compatible = False
+                break
+        if compatible:
+            compatibles.append(part)
+
+    return compatibles
+
+
 def get_values_for_header(header_type, remove_empty=False):
     all_values = [] if remove_empty else ["---"]
     all_values.extend(parts.iloc[1][parts.iloc[0] == header_type].tolist())
@@ -146,6 +204,7 @@ def get_values_for_header(header_type, remove_empty=False):
 def solverChange(event):
     global selectedSolver
     selectedSolver = event.widget.value
+
     #TODO: updateLabelyCest()
 
 
@@ -178,7 +237,7 @@ def ModelBuildupGUI():
     close = gui.Button('Close', command=onCloseModelBuildup)
     buildup = gui.Button('Build-up', command=onBuildUpModelBuildup)
     reset = gui.Button('Reset', command=onResetModelBuildup)
-    solver = gui2.ComboBox(["OptiStruct", "Radioss"], command=solverChange, name="solver", width=150)
+    solver = gui2.ComboBox([(1,"OptiStruct"), (2,"Radioss")], command=solverChange, name="solver", width=150)
 
     header_frame = gui.HFrame(get_widget_header_structure(hierarchie_typu["groups"]["headers"]), container=True, maxwidth=500 )
 
