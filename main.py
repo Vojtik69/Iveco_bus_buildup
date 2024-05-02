@@ -11,8 +11,10 @@ import pandas as pd
 
 print("Initiating...")
 
-parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=1,
-                    header=[0, 1, 2])
+parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=[0, 1, 2, 3],
+                    header=[0, 1, 2], skipinitialspace=True)
+parts.columns.names = [None] * len(parts.columns.names)
+
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchie_typu = yaml.safe_load(file)
 
@@ -26,7 +28,7 @@ dialogAddPart = gui.Dialog(caption="Add Part")
 dialogEditPart = gui.Dialog(caption="Edit Part")
 
 
-selectedSolver = 1 #1-optistruct, 2-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
+selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 
 
 def mainFunc(*args, **kwargs):
@@ -42,8 +44,8 @@ def find_all_of_type(searched_type, remove_empty=False):
         all_of_type = []
     for index, row in parts.iterrows():
         # print(index)
-        if row.iloc[0] == searched_type and not pd.isna(row.iloc[1]):
-            all_of_type.append(index)
+        if index[0] == searched_type and not pd.isna(index[selectedSolver]):
+            all_of_type.append(index[1])
     return all_of_type
 
 def update_subordinant_items(data_structure, name):
@@ -65,12 +67,14 @@ def onSelectedCombo():
 
 def find_path_to_name(data_structure, name, current_path=[]):
     if isinstance(data_structure, list):
+        print("list")
         for index, item in enumerate(data_structure):
             new_path = current_path + [index]
             result = find_path_to_name(item, name, new_path)
             if result is not None:
                 return result
     elif isinstance(data_structure, dict):
+        print("dict")
         for key, value in data_structure.items():
             new_path = current_path + [key]
             if key == "name" and value == name:
@@ -78,6 +82,7 @@ def find_path_to_name(data_structure, name, current_path=[]):
             result = find_path_to_name(value, name, new_path)
             if result is not None:
                 return result
+    print(type(data_structure))
     return None
 
 
@@ -93,14 +98,17 @@ def get_element_by_path(data_structure, path):
 
 def find_superordinant_fts(data_structure, name, superordinants = []):
     path = find_path_to_name(data_structure, name)
+    print(f'path:{path}')
 
     if path is None:
+        print(f'superordinants:{superordinants}')
         return superordinants
 
-    # if it first level under header, use header as superordinant
+    # if it first level under vehicle_spec, use vehicle_spec as superordinant
     if path[-4] == "FT groups":
-        for header in get_element_by_path(data_structure, ["groups", "headers"]):
-            superordinants.append(header.get("name",""))
+        for vehicle_spec in get_element_by_path(data_structure, ["groups", "vehicle_spec"]):
+            superordinants.append(vehicle_spec.get("name",""))
+        print(f'superordinants:{superordinants}')
         return superordinants
 
     level_up = -4 if path[-2] == "FTs" else -2
@@ -113,6 +121,8 @@ def find_superordinant_fts(data_structure, name, superordinants = []):
     if superordinant_element.get("skippable", False):
         find_superordinant_fts(data_structure, superordinant_name, superordinants)
 
+
+    print(f'superordinants:{superordinants}')
     return superordinants
 
 def find_subordinant_fts(data_structure, name, subordinants = []):
@@ -160,44 +170,48 @@ def get_widget_structure(structure, levelWidgets=[], offset=0):
 
     return levelWidgets
 
-def get_widget_header_structure(structure, headerWidgets=[]):
-    for header in structure:
-        label_objekt = gui.Label(text=header.get("name", ""), font={'bold': True})
+def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
+    for vehicle_spec in structure:
+        label_objekt = gui.Label(text=vehicle_spec.get("name", ""), font={'bold': True})
 
-        if header.get("multiselection", False):
-            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=header.get('name', ""))
+        if vehicle_spec.get("multiselection", False):
+            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicle_spec.get('name', ""))
         else:
-            vyber_objekt = gui2.ComboBox(get_values_for_header(header.get('name', ""), remove_empty=False), command=onSelectedCombo, name=header.get('name',""))
+            vyber_objekt = gui2.ComboBox(get_values_for_vehicle_spec(vehicle_spec.get('name', ""), remove_empty=False), command=onSelectedCombo, name=vehicle_spec.get('name',""))
 
-        widgetyBuildup[f'label_{header.get("name", "")}'] = label_objekt
-        widgetyBuildup[f'vyber_{header.get("name", "")}'] = vyber_objekt
+        widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'] = label_objekt
+        widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'] = vyber_objekt
 
-        headerWidgets.append([[(widgetyBuildup[f'label_{header.get("name", "")}'],widgetyBuildup[f'vyber_{header.get("name", "")}'])]])
+        vehicle_spec_Widgets.append([[(widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'],widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'])]])
 
-    return headerWidgets
+    return vehicle_spec_Widgets
 
 
 def find_compatible_parts(data_structure, name, removeEmpty = False):
-    compatibles = [] if removeEmpty else [("---", "---")]
-    superordinants = find_superordinant_fts(data_structure, name, superordinants=[])
+    compatibles = [] if removeEmpty else ["---"]
+    superordinant_types = find_superordinant_fts(data_structure, name, superordinants=[])
     all_of_type = find_all_of_type(name, remove_empty=True)
-
+    print("find compatibles")
     for part in all_of_type:
         compatible = True
-        for superordinant in superordinants:
-            print(widgetyBuildup[f'vyber_{superordinant}'].get())
-            if pd.isna(parts.loc[part, [:, :, widgetyBuildup[f'vyber_{superordinant}'].get()]]):
-                compatible = False
-                break
+        print(f"part: {part}")
+        for superordinant_type in superordinant_types:
+            print(f"superordinant type: {superordinant_type}")
+            if widgetyBuildup[f'vyber_{superordinant_type}'].get() != "---":
+                hodnota = parts.loc[(slice(None), part),(slice(None), slice(None), widgetyBuildup[f'vyber_{superordinant_type}'].get())].iat[0, 0]
+                print(f'{part} vs {superordinant_type}: {hodnota}')
+                if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinant_type}'].get())].iat[0, 0]):
+                    compatible = False
+                    break
         if compatible:
             compatibles.append(part)
-
     return compatibles
 
 
-def get_values_for_header(header_type, remove_empty=False):
+def get_values_for_vehicle_spec(vehicle_spec_type, remove_empty=False):
     all_values = [] if remove_empty else ["---"]
-    all_values.extend(parts.iloc[1][parts.iloc[0] == header_type].tolist())
+    vehicle_spec_columns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicle_spec_type]
+    all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
     return all_values
 
 
@@ -239,7 +253,7 @@ def ModelBuildupGUI():
     reset = gui.Button('Reset', command=onResetModelBuildup)
     solver = gui2.ComboBox([(1,"OptiStruct"), (2,"Radioss")], command=solverChange, name="solver", width=150)
 
-    header_frame = gui.HFrame(get_widget_header_structure(hierarchie_typu["groups"]["headers"]), container=True, maxwidth=500 )
+    vehicle_spec_frame = gui.HFrame(get_widget_vehicle_spec_structure(hierarchie_typu["groups"]["vehicle_spec"]), container=True, maxwidth=500 )
 
     widget_frame = gui.HFrame(get_widget_structure(hierarchie_typu["groups"]["FT groups"]), container=True, )
     widget_frame.maxheight = widget_frame.reqheight
@@ -247,7 +261,7 @@ def ModelBuildupGUI():
     main_frame = gui.VFrame(
         solver,
         15,
-        header_frame,
+        vehicle_spec_frame,
         15,
         widget_frame,
         15,

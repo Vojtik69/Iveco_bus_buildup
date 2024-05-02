@@ -1,5 +1,5 @@
 groups:
-  headers:
+  vehicle_spec:
       - name: Vehicle Type
       - name: Power Unit Type
       - name: Length
