@@ -109,10 +109,10 @@ def find_compatible_parts(data_structure, name, removeEmpty = False):
 
 
 
-# print(find_path_to_name(hierarchie_typu, "FT 6"))
-# adresa = find_path_to_name(hierarchie_typu, "FT 6")
+# print(find_path_to_name(hierarchy_of_types, "FT 6"))
+# adresa = find_path_to_name(hierarchy_of_types, "FT 6")
 #
-# print(get_element_by_path(hierarchie_typu,adresa))
+# print(get_element_by_path(hierarchy_of_types,adresa))
 
 print(find_compatible_parts(hierarchie_typu, "FT 2"))
 

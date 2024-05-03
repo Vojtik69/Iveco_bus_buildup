@@ -8,6 +8,7 @@ from functools import partial
 import yaml
 import os.path
 import pandas as pd
+import inspect
 
 print("Initiating...")
 
@@ -16,7 +17,7 @@ parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_p
 parts.columns.names = [None] * len(parts.columns.names)
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
-    hierarchie_typu = yaml.safe_load(file)
+    hierarchy_of_types = yaml.safe_load(file)
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
@@ -48,46 +49,29 @@ def find_all_of_type(searched_type, remove_empty=False):
             all_of_type.append(index[1])
     return all_of_type
 
-def update_subordinant_items(data_structure, name):
-    subordinants = find_subordinant_fts(data_structure, name)
-    for subordinant in subordinants:
-        # if it is multisielection ListBox
-        if type(widgetyBuildup[f'vyber_{subordinant}']) == gui2.ListBox.ListBox:
-            widgetyBuildup["vyber_" + subordinant].clear()
-            # TODO widgetyBuildup["vyber_" + subordinant].append(
-            # TODO najdi_kompatibilni_radky(event.value, typ, only_names=True, removeEmpty=True))
-        # if it is onlyselection Combo
-        else:
-            pass
-            # TODO widgetyBuildup["vyber_" + subordinant].setValues(
-            # TODO najdi_kompatibilni_radky(event.value, typ, only_names=True, removeEmpty=False))
-def onSelectedCombo():
-    pass
 
-
-def find_path_to_name(data_structure, name, current_path=[]):
-    if isinstance(data_structure, list):
-        print("list")
-        for index, item in enumerate(data_structure):
+def find_path_to_name(hierarchy, name, current_path=[]):
+    # print(f"name: {name}")
+    # print(f"hierarchy: {hierarchy}")
+    if isinstance(hierarchy, list):
+        for index, item in enumerate(hierarchy):
             new_path = current_path + [index]
             result = find_path_to_name(item, name, new_path)
             if result is not None:
                 return result
-    elif isinstance(data_structure, dict):
-        print("dict")
-        for key, value in data_structure.items():
+    elif isinstance(hierarchy, dict):
+        for key, value in hierarchy.items():
             new_path = current_path + [key]
             if key == "name" and value == name:
                 return new_path[:-1]
             result = find_path_to_name(value, name, new_path)
             if result is not None:
                 return result
-    print(type(data_structure))
     return None
 
 
-def get_element_by_path(data_structure, path):
-    element = data_structure
+def get_element_by_path(hierarchy, path):
+    element = hierarchy
     try:
         for key_or_index in path:
             element = element[key_or_index]
@@ -96,53 +80,96 @@ def get_element_by_path(data_structure, path):
         return None
 
 
-def find_superordinant_fts(data_structure, name, superordinants = []):
-    path = find_path_to_name(data_structure, name)
-    print(f'path:{path}')
+def find_superordinant_fts(hierarchy, name, superordinants = []):
+    path = find_path_to_name(hierarchy, name)
+    # print(f'path:{path}')
 
     if path is None:
-        print(f'superordinants:{superordinants}')
+        # print(f'superordinants:{superordinants}')
         return superordinants
 
     # if it first level under vehicle_spec, use vehicle_spec as superordinant
-    if path[-4] == "FT groups":
-        for vehicle_spec in get_element_by_path(data_structure, ["groups", "vehicle_spec"]):
-            superordinants.append(vehicle_spec.get("name",""))
-        print(f'superordinants:{superordinants}')
-        return superordinants
+    if len(path)>3:
+        if path[-4] == "FT groups":
+            for vehicle_spec in get_element_by_path(hierarchy, ["groups", "vehicle_spec"]):
+                superordinants.append(vehicle_spec.get("name",""))
+            # print(f'superordinants:{superordinants}')
+            return superordinants
 
     level_up = -4 if path[-2] == "FTs" else -2
 
     path_level_up = path[:level_up]
-    superordinant_element = get_element_by_path(data_structure, path_level_up)
-    superordinant_name = get_element_by_path(data_structure, path_level_up[:-2]).get("name","")
+    superordinant_element = get_element_by_path(hierarchy, path_level_up)
+    superordinant_name = get_element_by_path(hierarchy, path_level_up[:-2]).get("name", "")
     for ft in superordinant_element.get("FTs", []):
         superordinants.append(ft.get("name", ""))
     if superordinant_element.get("skippable", False):
-        find_superordinant_fts(data_structure, superordinant_name, superordinants)
+        find_superordinant_fts(hierarchy, superordinant_name, superordinants)
 
 
-    print(f'superordinants:{superordinants}')
+    # print(f'superordinants:{superordinants}')
     return superordinants
 
-def find_subordinant_fts(data_structure, name, subordinants = []):
-    path = find_path_to_name(data_structure, name)
 
+def find_subordinant_fts(hierarchy, name, subordinants = None):
+    subordinants = [] if subordinants is None else subordinants
+    caller = inspect.stack()[1]
+    caller_name = caller.function
+    print(f"{caller_name} called my_function")
+    print(f"name: {name} - subordinants: {subordinants}")
+    path = find_path_to_name(hierarchy, name)
+    print(f"name: {name} - path: {path}")
     if path is None:
         return subordinants
 
-    level_up = -2 if path[-2] == "FTs" else None
+    if path[-2] == "FTs":
+        level_up = -2
+        superordinant_element = get_element_by_path(hierarchy, path[:level_up])
+        groups_for_searching = superordinant_element.get("groups", [])
+    elif path[-2] == "vehicle_spec":
+        groups_for_searching = hierarchy["groups"]["FT groups"]
+    elif path[-2] == "groups":
+        level_up = -4
+        superordinant_element = get_element_by_path(hierarchy, path[:level_up])
+        groups_for_searching = superordinant_element.get("groups", [])
+    elif path[-2] == "FT groups":
+        level_up = 0
+        superordinant_element = get_element_by_path(hierarchy, path)
+        groups_for_searching = superordinant_element.get("groups", [])
 
-    superodinant_element = get_element_by_path(data_structure, path[:level_up])
 
-    for group in superodinant_element.get("groups", []):
+    for group in groups_for_searching:
         for ft in group.get("FTs", []):
             subordinants.append(ft.get("name",""))
 
         if group.get("skippable", False):
-            find_subordinant_fts(data_structure, group.get("name", ""), subordinants)
+            find_subordinant_fts(hierarchy, group.get("name", ""), subordinants)
 
     return subordinants
+
+
+def update_subordinant_items(hierarchy, name):
+    subordinants = find_subordinant_fts(hierarchy, name)
+    print(f"subordinants in update_subordinant_items: {subordinants}")
+    for subordinant in subordinants:
+        # if it is multiselection ListBox
+        # if type(widgetyBuildup[f'vyber_{subordinant}']) == gui2.ListBox:
+        if isinstance(widgetyBuildup[f'vyber_{subordinant}'], gui2.ListBox):
+            widgetyBuildup["vyber_" + subordinant].clear()
+            widgetyBuildup["vyber_" + subordinant].append(find_compatible_parts(hierarchy, subordinant, removeEmpty=True))
+        # if it is onlyselection Combo
+        else:
+            pass
+            widgetyBuildup["vyber_" + subordinant].setValues(find_compatible_parts(hierarchy, subordinant, removeEmpty=False))
+
+
+def onSelectedCombo(event):
+    print(f"event.widget.value: {event.widget.value}")
+    update_subordinant_items(hierarchy_of_types, event.widget.name)
+    return
+
+
+
 
 def get_widget_structure(structure, levelWidgets=[], offset=0):
     subgrouping = True if levelWidgets else False
@@ -157,6 +184,7 @@ def get_widget_structure(structure, levelWidgets=[], offset=0):
 
             if ft.get("multiselection", False):
                 vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""))
+                vyber_objekt.append(find_all_of_type(ft.get('name',""),remove_empty=True))
             else:
                 vyber_objekt = gui2.ComboBox(find_all_of_type(ft.get('name',""),remove_empty=False), command=onSelectedCombo, name=ft.get('name',""))
 
@@ -187,19 +215,24 @@ def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
     return vehicle_spec_Widgets
 
 
-def find_compatible_parts(data_structure, name, removeEmpty = False):
+def find_compatible_parts(hierarchy, name, removeEmpty = False):
+    global selectedSolver
     compatibles = [] if removeEmpty else ["---"]
-    superordinant_types = find_superordinant_fts(data_structure, name, superordinants=[])
+    superordinant_types = find_superordinant_fts(hierarchy, name, superordinants=[])
     all_of_type = find_all_of_type(name, remove_empty=True)
-    print("find compatibles")
+    # print("find compatibles")
+    print(selectedSolver)
     for part in all_of_type:
         compatible = True
-        print(f"part: {part}")
+        #if the part has not file for current solver, go next
+
+        if pd.isna(parts[parts.index.get_level_values(1) == part].index.get_level_values(selectedSolver)):
+            print("not compatible")
+            continue
+        # print(f"part: {part}")
         for superordinant_type in superordinant_types:
-            print(f"superordinant type: {superordinant_type}")
+            # print(f"superordinant type: {superordinant_type}")
             if widgetyBuildup[f'vyber_{superordinant_type}'].get() != "---":
-                hodnota = parts.loc[(slice(None), part),(slice(None), slice(None), widgetyBuildup[f'vyber_{superordinant_type}'].get())].iat[0, 0]
-                print(f'{part} vs {superordinant_type}: {hodnota}')
                 if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinant_type}'].get())].iat[0, 0]):
                     compatible = False
                     break
@@ -209,18 +242,45 @@ def find_compatible_parts(data_structure, name, removeEmpty = False):
 
 
 def get_values_for_vehicle_spec(vehicle_spec_type, remove_empty=False):
+    print(f"vehicle_spec_type: {vehicle_spec_type}")
     all_values = [] if remove_empty else ["---"]
+    print(f"all_values: {all_values}")
     vehicle_spec_columns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicle_spec_type]
     all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
+    print(f"all_values: {all_values}")
     return all_values
 
 
 def solverChange(event):
     global selectedSolver
     selectedSolver = event.widget.value
+    # print(selectedSolver)
+    # print(widgetyBuildup)
+    for label, widget in widgetyBuildup.items():
+        # print(label)
+        # print(widget)
+        if "vyber_" in label:
+            items = find_compatible_parts(hierarchy_of_types, label.replace("vyber_",""), removeEmpty = False)
+            widget.setValues(items)
 
-    #TODO: updateLabelyCest()
-
+        # TODO: u multiselection se musi zachovat i vice predtim vybranych hodnot, ne jen jedna a cele to pujde napsat nejak lepe a ty 3 radky nahore se budou skrtat
+        # if type(widget) == gui2.ListBox:
+        if isinstance(widget, gui2.ListBox):
+            value = widget.get()
+            widget.clear()
+            widget.append(find_compatible_parts(hierarchy_of_types, label.replace("vyber_",""), removeEmpty = True))
+            try:
+                widget.set(value)
+            except:
+                pass
+        # if it is onlyselection Combo
+        elif isinstance(widget, gui2.ComboBox):
+            items = find_all_of_type(typ, remove_empty=False)
+            print(f"items: {items}")
+            if len(items) == 1:
+                values = get_values_for_vehicle_spec(typ, remove_empty=False)
+            widget.setValues(items)
+            widget.value = "---"
 
 def ModelBuildupGUI():
     # Method called on clicking 'Close'.
@@ -239,23 +299,34 @@ def ModelBuildupGUI():
 
     # Method called on clicking 'Reset'.
     def onResetModelBuildup(event):
-        pass
-        # TODO for [typ, multiselection] in extractAllTypes(hierarchie_typu):
-        #     if multiselection:
-        #         widgetyBuildup[f'vyber_{typ}'].clear()
-        #     else:
-        #         widgetyBuildup[f'vyber_{typ}'].setValues(najdi_vsechny_daneho_typu(typ))
-        #         widgetyBuildup[f'vyber_{typ}'].value = "---"
-        # updateLabelyCest()
+        for label, widget in widgetyBuildup.items():
+            # print(label)
+            # print(widget)
+            typ = label.replace("vyber_", "")
+            # if it is multiselection ListBox
+
+            # if type(widget) == gui2.ListBox:
+            if isinstance(widget, gui2.ListBox):
+                widget.clear()
+                widget.append(find_all_of_type(typ, remove_empty=True))
+            # if it is onlyselection Combo
+            elif isinstance(widget, gui2.ComboBox):
+                values = find_all_of_type(typ, remove_empty=False)
+                print(f"values: {values}")
+                if len(values) == 1:
+                    values = get_values_for_vehicle_spec(typ, remove_empty=False)
+                widget.setValues(values)
+                widget.value = "---"
+        return
 
     close = gui.Button('Close', command=onCloseModelBuildup)
     buildup = gui.Button('Build-up', command=onBuildUpModelBuildup)
     reset = gui.Button('Reset', command=onResetModelBuildup)
-    solver = gui2.ComboBox([(1,"OptiStruct"), (2,"Radioss")], command=solverChange, name="solver", width=150)
+    solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=solverChange, name="solver", width=150)
 
-    vehicle_spec_frame = gui.HFrame(get_widget_vehicle_spec_structure(hierarchie_typu["groups"]["vehicle_spec"]), container=True, maxwidth=500 )
+    vehicle_spec_frame = gui.HFrame(get_widget_vehicle_spec_structure(hierarchy_of_types["groups"]["vehicle_spec"]), container=True, maxwidth=500)
 
-    widget_frame = gui.HFrame(get_widget_structure(hierarchie_typu["groups"]["FT groups"]), container=True, )
+    widget_frame = gui.HFrame(get_widget_structure(hierarchy_of_types["groups"]["FT groups"]), container=True, )
     widget_frame.maxheight = widget_frame.reqheight
 
     main_frame = gui.VFrame(
