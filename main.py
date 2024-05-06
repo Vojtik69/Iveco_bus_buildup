@@ -259,28 +259,39 @@ def solverChange(event):
     for label, widget in widgetyBuildup.items():
         # print(label)
         # print(widget)
-        if "vyber_" in label:
-            items = find_compatible_parts(hierarchy_of_types, label.replace("vyber_",""), removeEmpty = False)
-            widget.setValues(items)
 
-        # TODO: u multiselection se musi zachovat i vice predtim vybranych hodnot, ne jen jedna a cele to pujde napsat nejak lepe a ty 3 radky nahore se budou skrtat
         # if type(widget) == gui2.ListBox:
         if isinstance(widget, gui2.ListBox):
-            value = widget.get()
+            items = widget.items
+            selectedIndexes = widget.selectedIndexes
+            if selectedIndexes:
+                selectedItems = [items[index] for index in selectedIndexes]
+            else:
+                selectedItems = []
+
             widget.clear()
             widget.append(find_compatible_parts(hierarchy_of_types, label.replace("vyber_",""), removeEmpty = True))
-            try:
-                widget.set(value)
-            except:
-                pass
+
+            for index, item in enumerate(widget.items):
+                if item in selectedItems:
+                    print(f"selected items: {selectedItems}")
+                    print(f"index: {index}, {item}")
+                    widget.select(index)
+
+
         # if it is onlyselection Combo
         elif isinstance(widget, gui2.ComboBox):
-            items = find_all_of_type(typ, remove_empty=False)
-            print(f"items: {items}")
-            if len(items) == 1:
-                values = get_values_for_vehicle_spec(typ, remove_empty=False)
-            widget.setValues(items)
-            widget.value = "---"
+            selected_value = widget.value
+            values = find_all_of_type(label.replace("vyber_", ""), remove_empty=False)
+            print(f"values: {values}")
+            if len(values) == 1:
+                values = get_values_for_vehicle_spec(label.replace("vyber_", ""), remove_empty=False)
+            widget.setValues(values)
+
+            try:
+                widget.value = selected_value
+            except:
+                pass
 
 def ModelBuildupGUI():
     # Method called on clicking 'Close'.
