@@ -3,9 +3,9 @@
 type,name,optistruct,radioss,Low Floor,Low Entry,Low Decker,High Decker,Diesel,Diesel MH,CNG,CNG MH,ZEV,H2,10 m,12 m,13 m,18 m,var_D_10,var_D_12,var_35,FT2_var3,FT2_var1,FT4_var1,FT4_var1,FT_4_var1,FT5_var1,Other1,Other2
 FT 1 Lorem ipsum,var_D_10,C:/var_D_10_os.inc,C:/var_D_10_radioss.inc,1,1,1,1,1,1,,,,,1,,,,,,,,,,,,,,
 FT 1 Lorem ipsum,var_D_12,C:/var_D_12_os.inc,C:/var_D_12_radioss.inc,1,1,1,1,1,1,,,,,1,1,,,,,,,,,,,,,
-FT 1 Lorem ipsum,var_35,C:/var_35_os.inc,C:/var_35_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
+FT 1 Lorem ipsum,var_35,C:/var_35_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\02_reduced_BIW_model\first_includes\Rear.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 2,FT2_var3,C:/FT2_var3_os.inc,C:/FT2_var3_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-FT 2,FT2_var1,C:/FT2_var1_os.inc,C:/FT2_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
+FT 2,FT2_var1,C:/FT2_var1_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\02_reduced_BIW_model\first_includes\front_mid.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 4,FT4_var1,C:/FT4_var1_os.inc,C:/FT4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 4,FT4_var2,C:/FT4_var1_os.inc,C:/FT4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 4,FT_4_var1,C:/FT_4_var1_os.inc,C:/FT_4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,

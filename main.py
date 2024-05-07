@@ -9,6 +9,8 @@ import yaml
 import os.path
 import pandas as pd
 import inspect
+import os
+import sys
 
 print("Initiating...")
 
@@ -18,6 +20,8 @@ parts.columns.names = [None] * len(parts.columns.names)
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchy_of_types = yaml.safe_load(file)
+
+tcl_path = "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
@@ -68,6 +72,12 @@ def find_path_to_name(hierarchy, name, current_path=[]):
             if result is not None:
                 return result
     return None
+
+
+def load_include_file(part):
+    hw.evalTcl(f'puts "Importing {part}..."')
+    include_file_path = find_path_to_include_file(parts, part).replace("\\","/")
+    return include_file_path
 
 
 def get_element_by_path(hierarchy, path):
@@ -168,7 +178,13 @@ def onSelectedCombo(event):
     update_subordinant_items(hierarchy_of_types, event.widget.name)
     return
 
-
+def find_path_to_include_file(part_db, name):
+    print(f"name: {name}")
+    if name != "---":
+        path = part_db[part_db.index.get_level_values(1) == name].index.get_level_values(selectedSolver).tolist()[0]
+    else:
+        path = ""
+    return path.replace("\\","/")
 
 
 def get_widget_structure(structure, levelWidgets=[], offset=0):
@@ -302,11 +318,41 @@ def ModelBuildupGUI():
 
     # Method called on clicking 'Build-up'.
     def onBuildUpModelBuildup(event):
-        pass
-        # TODO global dialogModelBuildup
-        # dialogModelBuildup.Hide()
-        # gui2.tellUser('Done!')
-        # dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
+        print(f"BuildUp")
+        for label, widget in widgetyBuildup.items():
+            print(f"Widget: {widget}")
+            # if type(widget) == gui2.ListBox:
+            if isinstance(widget, gui2.ListBox):
+                print(f"ListBox: {widget}")
+                items = widget.items
+                selectedIndexes = widget.selectedIndexes
+                if selectedIndexes:
+                    selectedItems = [items[index] for index in selectedIndexes]
+                else:
+                    selectedItems = []
+
+                for selected_item in selectedItems:
+                    if selected_item != "---":
+                        path = find_path_to_include_file(parts, selected_item)
+                        print(f"path: {path}")
+                        hw.evalTcl(f'source "{tcl_path}"; import_data "{path}"')
+                    else:
+                        print(f"selected_item: {selected_item}")
+
+            # if it is onlyselection Combo
+            elif isinstance(widget, gui2.ComboBox):
+                print(f"Combo: {widget}")
+                selected_value = widget.value
+                if selected_value != "---":
+                    path = find_path_to_include_file(parts, selected_value)
+                    print(f"path: {path}")
+                    hw.evalTcl(f'source "{tcl_path}"; import_data "{path}"')
+                else:
+                    print(f"selected_item: {selected_value}")
+        global dialogModelBuildup
+        dialogModelBuildup.Hide()
+        gui2.tellUser('Model build-up has finished!')
+        dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
     # Method called on clicking 'Reset'.
     def onResetModelBuildup(event):
