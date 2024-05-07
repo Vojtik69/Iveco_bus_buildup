@@ -1,10 +1,14 @@
 <root>
     <actionlist>
-        <action tag="OpenWizard" text="Wizard" tooltip="Wizard of Iveco Custom Build" image="WizardStrip-80.png" command="py: $EXTENSION_DIR.iveco.mainFunc()"/>
+        <action tag="BuildUp" text="Build Up" tooltip="Build Up of Model" image="Buildup-80.png" command="py: $EXTENSION_DIR.main.mainFunc()"/>
+        <action tag="Add" text="Add Part" tooltip="Add a new part to database" image="Add-80.png" command="py: $EXTENSION_DIR.iveco.mainFunc()"/>
+        <action tag="Edit" text="Edit Part" tooltip="Edit existing Part in database" image="Edit-80.png" command="py: $EXTENSION_DIR.iveco.mainFunc()"/>
     </actionlist>
 	<page tag="Iveco_Custom_Build" text="Iveco Custom Build">
         <group tag="OpenWizard_menu" text="">
-			<action actiontag="OpenWizard"/>
+			<action actiontag="BuildUp"/>
+            <action actiontag="Add"/>
+            <action actiontag="Edit"/>
         </group>
     </page>
 </root>

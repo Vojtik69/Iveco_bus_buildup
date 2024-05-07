@@ -36,10 +36,6 @@ dialogEditPart = gui.Dialog(caption="Edit Part")
 selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 
 
-def mainFunc(*args, **kwargs):
-    ModelBuildupGUI()
-    print("Initiated...")
-
 
 def find_all_of_type(searched_type, remove_empty=False):
 
@@ -199,10 +195,10 @@ def get_widget_structure(structure, levelWidgets=[], offset=0):
             label_objekt = gui.Label(text=ft.get("name", ""))
 
             if ft.get("multiselection", False):
-                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""))
+                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
                 vyber_objekt.append(find_all_of_type(ft.get('name',""),remove_empty=True))
             else:
-                vyber_objekt = gui2.ComboBox(find_all_of_type(ft.get('name',""),remove_empty=False), command=onSelectedCombo, name=ft.get('name',""))
+                vyber_objekt = gui2.ComboBox(find_all_of_type(ft.get('name',""),remove_empty=False), command=onSelectedCombo, name=ft.get('name',""), width=150-(offset*5))
 
             widgetyBuildup[f'label_{ft.get("name", "")}'] = label_objekt
             widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyber_objekt
@@ -219,9 +215,9 @@ def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
         label_objekt = gui.Label(text=vehicle_spec.get("name", ""), font={'bold': True})
 
         if vehicle_spec.get("multiselection", False):
-            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicle_spec.get('name', ""))
+            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicle_spec.get('name', ""), width=150)
         else:
-            vyber_objekt = gui2.ComboBox(get_values_for_vehicle_spec(vehicle_spec.get('name', ""), remove_empty=False), command=onSelectedCombo, name=vehicle_spec.get('name',""))
+            vyber_objekt = gui2.ComboBox(get_values_for_vehicle_spec(vehicle_spec.get('name', ""), remove_empty=False), command=onSelectedCombo, name=vehicle_spec.get('name',""), width=150)
 
         widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'] = label_objekt
         widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'] = vyber_objekt
@@ -310,11 +306,12 @@ def solverChange(event):
                 pass
 
 def ModelBuildupGUI():
+    global dialogModelBuildup
+
     # Method called on clicking 'Close'.
     def onCloseModelBuildup(event):
-        global dialogModelBuildup
-        dialogModelBuildup.Hide()
-        dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
+        dialogModelBuildup.hide()
+
 
     # Method called on clicking 'Build-up'.
     def onBuildUpModelBuildup(event):
@@ -380,6 +377,8 @@ def ModelBuildupGUI():
     buildup = gui.Button('Build-up', command=onBuildUpModelBuildup)
     reset = gui.Button('Reset', command=onResetModelBuildup)
     solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=solverChange, name="solver", width=150)
+    load = gui.Button('Load setup', command=onCloseModelBuildup)
+    save = gui.Button('Save setup', command=onBuildUpModelBuildup)
 
     vehicle_spec_frame = gui.HFrame(get_widget_vehicle_spec_structure(hierarchy_of_types["groups"]["vehicle_spec"]), container=True, maxwidth=500)
 
@@ -387,23 +386,31 @@ def ModelBuildupGUI():
     widget_frame.maxheight = widget_frame.reqheight
 
     main_frame = gui.VFrame(
-        solver,
+        (solver, "<->", load, save),
         15,
         vehicle_spec_frame,
         15,
         widget_frame,
         15,
-        (500, buildup, reset, close)
+        ("<->", buildup, reset, close)
 
     )
+
 
     dialogModelBuildup.recess().add(main_frame)
 
     dialogModelBuildup.setButtonVisibile('ok', False)
     dialogModelBuildup.setButtonVisibile('cancel', False)
-    dialogModelBuildup.show(width=1000, height=500)
+
     # main_frame.move(x = 1, y = 1)
 
+def mainFunc(*args, **kwargs):
+    global dialogModelBuildup
+
+    dialogModelBuildup.show(width=1000, height=500)
+    print("Initiated...")
+
+ModelBuildupGUI()
 
 if __name__ == "__main__":
     mainFunc()
