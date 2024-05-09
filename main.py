@@ -12,7 +12,8 @@ from hwx import gui as gui2
 import yaml
 import pandas as pd
 
-from common import find_all_of_type, update_subordinant_items, find_path_to_include_file, find_compatible_parts
+from common import find_all_of_type, find_path_to_include_file, solverChange, onSelectedCombo, \
+    get_values_for_vehicle_spec
 
 print("Initiating...")
 
@@ -40,12 +41,6 @@ selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, w
 solver_interface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 
-def onSelectedCombo(event):
-    print(f"event.widget.value: {event.widget.value}")
-    update_subordinant_items(hierarchy_of_types, parts, widgetyBuildup, selectedSolver, event.widget.name)
-    return
-
-
 def get_widget_structure(structure, levelWidgets=[], offset=0):
     subgrouping = True if levelWidgets else False
     for index, level in enumerate(structure):
@@ -62,7 +57,8 @@ def get_widget_structure(structure, levelWidgets=[], offset=0):
                 vyber_objekt.append(find_all_of_type(parts, selectedSolver, ft.get('name', ""), remove_empty=True))
             else:
                 vyber_objekt = gui2.ComboBox(
-                    find_all_of_type(parts, selectedSolver, ft.get('name', ""), remove_empty=False), command=onSelectedCombo, name=ft.get('name', ""), width=150 - (offset * 5))
+                    find_all_of_type(parts, selectedSolver, ft.get('name', ""), remove_empty=False), command=lambda event: onSelectedCombo(
+                event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver), name=ft.get('name', ""), width=150 - (offset * 5))
 
             widgetyBuildup[f'label_{ft.get("name", "")}'] = label_objekt
             widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyber_objekt
@@ -81,7 +77,9 @@ def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
         if vehicle_spec.get("multiselection", False):
             vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicle_spec.get('name', ""), width=150)
         else:
-            vyber_objekt = gui2.ComboBox(get_values_for_vehicle_spec(vehicle_spec.get('name', ""), remove_empty=False), command=onSelectedCombo, name=vehicle_spec.get('name',""), width=150)
+            vyber_objekt = gui2.ComboBox(
+                get_values_for_vehicle_spec(parts, vehicle_spec.get('name', ""), remove_empty=False), command=lambda event: onSelectedCombo(
+                event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver), name=vehicle_spec.get('name', ""), width=150)
 
         widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'] = label_objekt
         widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'] = vyber_objekt
@@ -89,61 +87,6 @@ def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
         vehicle_spec_Widgets.append([[(widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'],widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'])]])
 
     return vehicle_spec_Widgets
-
-
-def get_values_for_vehicle_spec(vehicle_spec_type, remove_empty=False):
-    print(f"vehicle_spec_type: {vehicle_spec_type}")
-    all_values = [] if remove_empty else ["---"]
-    print(f"all_values: {all_values}")
-    vehicle_spec_columns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicle_spec_type]
-    all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
-    print(f"all_values: {all_values}")
-    return all_values
-
-
-def solverChange(event):
-    global selectedSolver
-    selectedSolver = event.widget.value
-    # print(selectedSolver)
-    # print(widgetyBuildup)
-    for label, widget in widgetyBuildup.items():
-        # print(label)
-        # print(widget)
-
-        # if it is Multiselection
-        if isinstance(widget, gui2.ListBox):
-            items = widget.items
-            selectedIndexes = widget.selectedIndexes
-            if selectedIndexes:
-                selectedItems = [items[index] for index in selectedIndexes]
-            else:
-                selectedItems = []
-
-            widget.clear()
-            widget.append(
-                find_compatible_parts(hierarchy_of_types, parts, widgetyBuildup, selectedSolver,
-                                      label.replace("vyber_", ""), removeEmpty=True))
-
-            for index, item in enumerate(widget.items):
-                if item in selectedItems:
-                    print(f"selected items: {selectedItems}")
-                    print(f"index: {index}, {item}")
-                    widget.select(index)
-
-
-        # if it is onlyselection Combo
-        elif isinstance(widget, gui2.ComboBox):
-            selected_value = widget.value
-            values = find_all_of_type(parts, selectedSolver, label.replace("vyber_", ""), remove_empty=False)
-            print(f"values: {values}")
-            if len(values) == 1:
-                values = get_values_for_vehicle_spec(label.replace("vyber_", ""), remove_empty=False)
-            widget.setValues(values)
-
-            try:
-                widget.value = selected_value
-            except:
-                pass
 
 
 def save_setup():
@@ -226,7 +169,7 @@ def resetModelBuildup(event):
             values = find_all_of_type(parts, selectedSolver, typ, remove_empty=False)
             print(f"values: {values}")
             if len(values) == 1:
-                values = get_values_for_vehicle_spec(typ, remove_empty=False)
+                values = get_values_for_vehicle_spec(parts, typ, remove_empty=False)
             widget.setValues(values)
             widget.value = "---"
     return
@@ -287,7 +230,10 @@ def ModelBuildupGUI():
     close = gui.Button('Close', command=onCloseModelBuildup)
     buildup = gui.Button('Build-up', command=onBuildUpModelBuildup)
     reset = gui.Button('Reset', command=onResetModelBuildup)
-    solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=solverChange, name="solver", width=150)
+    solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=lambda event: solverChange(event,
+                                                                                                 hierarchy_of_types,
+                                                                                                 parts, widgetyBuildup,
+                                                                                                 selectedSolver), name="solver", width=150)
     load = gui.Button('Load setup', command=load_setup)
     save = gui.Button('Save setup', command=save_setup)
 

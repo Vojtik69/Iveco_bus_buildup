@@ -180,3 +180,63 @@ def find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, name
         if compatible:
             compatibles.append(part)
     return compatibles
+
+
+def solverChange(event, hierarchy_of_types, parts, widgetyBuildup, selectedSolver):
+    selectedSolver = event.widget.value
+    # print(selectedSolver)
+    # print(widgetyBuildup)
+    for label, widget in widgetyBuildup.items():
+        # print(label)
+        # print(widget)
+
+        # if it is Multiselection
+        if isinstance(widget, gui2.ListBox):
+            items = widget.items
+            selectedIndexes = widget.selectedIndexes
+            if selectedIndexes:
+                selectedItems = [items[index] for index in selectedIndexes]
+            else:
+                selectedItems = []
+
+            widget.clear()
+            widget.append(
+                find_compatible_parts(hierarchy_of_types, parts, widgetyBuildup, selectedSolver,
+                                      label.replace("vyber_", ""), removeEmpty=True))
+
+            for index, item in enumerate(widget.items):
+                if item in selectedItems:
+                    print(f"selected items: {selectedItems}")
+                    print(f"index: {index}, {item}")
+                    widget.select(index)
+
+
+        # if it is onlyselection Combo
+        elif isinstance(widget, gui2.ComboBox):
+            selected_value = widget.value
+            values = find_all_of_type(parts, selectedSolver, label.replace("vyber_", ""), remove_empty=False)
+            print(f"values: {values}")
+            if len(values) == 1:
+                values = get_values_for_vehicle_spec(parts, label.replace("vyber_", ""), remove_empty=False)
+            widget.setValues(values)
+
+            try:
+                widget.value = selected_value
+            except:
+                pass
+
+
+def onSelectedCombo(event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver):
+    print(f"event.widget.value: {event.widget.value}")
+    update_subordinant_items(hierarchy_of_types, parts, widgetyBuildup, selectedSolver, event.widget.name)
+    return
+
+
+def get_values_for_vehicle_spec(parts, vehicle_spec_type, remove_empty=False):
+    print(f"vehicle_spec_type: {vehicle_spec_type}")
+    all_values = [] if remove_empty else ["---"]
+    print(f"all_values: {all_values}")
+    vehicle_spec_columns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicle_spec_type]
+    all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
+    print(f"all_values: {all_values}")
+    return all_values
