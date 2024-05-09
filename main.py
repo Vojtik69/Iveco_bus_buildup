@@ -70,6 +70,7 @@ def get_widget_structure(structure, levelWidgets=[], offset=0):
 
     return levelWidgets
 
+
 def get_widget_vehicle_spec_structure(structure, vehicle_spec_Widgets=[]):
     for vehicle_spec in structure:
         label_objekt = gui.Label(text=vehicle_spec.get("name", ""), font={'bold': True})

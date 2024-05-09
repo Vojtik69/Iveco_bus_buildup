@@ -240,3 +240,4 @@ def get_values_for_vehicle_spec(parts, vehicle_spec_type, remove_empty=False):
     all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
     print(f"all_values: {all_values}")
     return all_values
+
