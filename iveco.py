@@ -32,16 +32,50 @@ def mainFunc(*args,**kwargs):
     print("Initiated...")
 
 
-def extractAllNames(data, onlynames=False):
+def extractAllTypes(data, onlynames=False):
     names = []
-    for item in data:
-        if onlynames:
-            names.append(item['name'])
-        else:
-            names.append([item['name'], item['multiselection']])
-        if 'subordinates' in item:
-            names.extend(extractAllNames(item['subordinates'],onlynames))
+    # for item in hierarchy:
+    #     if onlynames:
+    #         names.append(item['name'])
+    #     else:
+    #         names.append([item['name'], item['multiselection']])
+    #     if 'subordinates' in item:
+    #         names.extend(extractAllTypes(item['subordinates'], onlynames=onlynames))
     return names
+
+def getWidgetStructure(struktura,levelWidgets=[]):
+    subgrouping = True if levelWidgets else False
+    print("startuji")
+    print(subgrouping)
+    for index, level in enumerate(struktura):
+        label_group = gui.Label(text=level.get("name"), font={'bold': True})
+        print(level.get("name"))
+        print(index)
+        if subgrouping:
+            levelWidgets[-1].append([(10, label_group,10) ])
+        else:
+            levelWidgets.append([(10, label_group, 10)])
+        for ft in level.get("FTs",[]):
+            label_objekt = gui.Label(text=ft.get("name",""))
+
+            if ft.get("multiselection", False):
+                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""))
+            else:
+                #TODO: vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(ft.get('name',""),remove_empty=False), command=onSelectedCombo, name=ft.get('name',""))
+                vyber_objekt = gui2.ComboBox([], name=ft.get('name', ""))
+
+            print(ft.get("name",""))
+            widgetyBuildup[f'label_{ft.get("name","")}'] = label_objekt
+            widgetyBuildup[f'vyber_{ft.get("name","")}'] = vyber_objekt
+
+            levelWidgets[-1].append(
+                    (widgetyBuildup[f'label_{ft.get("name", "")}'], 5, widgetyBuildup[f'vyber_{ft.get("name", "")}']))
+        if level.get("groups"):
+            print("jdu do podurovne")
+            getWidgetStructure(level['groups'],levelWidgets)
+
+    print(levelWidgets)
+    return levelWidgets
 
 def najit_prvek_podle_hodnoty(data, hodnota):
     if isinstance(data, dict):
@@ -151,7 +185,7 @@ def zjistiTypPodleCesty(cesta):
     return typ
 
 def updateLabelyCest():
-    for [typ,multiselection] in extractAllNames(hierarchie_typu):
+    for [typ,multiselection] in extractAllTypes(hierarchie_typu):
         try:
             widgetyBuildup[f'cesta_{typ}'].text = najdi_cestu(widgetyBuildup[f'vyber_{typ}'].value)
         except:
@@ -207,15 +241,13 @@ def ModelBuildupGUI():
         dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
     def onResetModelBuildup(event):
-        for [typ, multiselection] in extractAllNames(hierarchie_typu):
+        for [typ, multiselection] in extractAllTypes(hierarchie_typu):
             if multiselection:
                 widgetyBuildup[f'vyber_{typ}'].clear()
             else:
                 widgetyBuildup[f'vyber_{typ}'].setValues(najdi_vsechny_daneho_typu(typ))
                 widgetyBuildup[f'vyber_{typ}'].value = "---"
         updateLabelyCest()
-
-    obrazek = gui.Label(icon='N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/bus.png')
 
     close  = gui.Button('Close', command=onCloseModelBuildup)
     create = gui.Button('Build-up', command=onRunModelBuildup)
@@ -225,41 +257,48 @@ def ModelBuildupGUI():
     solver = gui2.ComboBox(["OptiStruct", "Radioss"], command=solverChange, name="solver", width=150)
 
     # Vytvoř widgetyBuildup
-    for [typ,multiselection] in extractAllNames(hierarchie_typu):
-        if multiselection:
-            label_objekt = gui.Label(text=f'{typ.capitalize()}')
-            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=typ)
+    for [typ,multiselection,header] in extractAllTypes(hierarchie_typu):
+        if not header:
+            if multiselection:
+                label_objekt = gui.Label(text=f'{typ.capitalize()}')
+                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=typ)
 
-            # Uložení objektů do slovníku
-            widgetyBuildup[f'label_{typ}'] = label_objekt
-            widgetyBuildup[f'vyber_{typ}'] = vyber_objekt
-        else:
-            label_objekt = gui.Label(text=f'{typ.capitalize()}')
-            vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ,removeEmpty=False), command=onSelectedCombo, name=typ)
-            cesta_objekt = gui2.Label("---", font=dict(size=8, italic=True))
+                # Uložení objektů do slovníku
+                widgetyBuildup[f'label_{typ}'] = label_objekt
+                widgetyBuildup[f'vyber_{typ}'] = vyber_objekt
+            else:
+                label_objekt = gui.Label(text=f'{typ.capitalize()}')
+                vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(typ,removeEmpty=False), command=onSelectedCombo, name=typ)
+                cesta_objekt = gui2.Label("---", font=dict(size=8, italic=True))
 
-            # Uložení objektů do slovníku
-            widgetyBuildup[f'label_{typ}'] = label_objekt
-            widgetyBuildup[f'vyber_{typ}'] = vyber_objekt
-            widgetyBuildup[f'cesta_{typ}'] = cesta_objekt
+                # Uložení objektů do slovníku
+                widgetyBuildup[f'label_{typ}'] = label_objekt
+                widgetyBuildup[f'vyber_{typ}'] = vyber_objekt
+                widgetyBuildup[f'cesta_{typ}'] = cesta_objekt
 
     # Napolohuj Widgety
-    mainFrame = gui.VFrame (
-                (solver, 300, widgetyBuildup['label_na_strechu'], 300, add, edit),
-                (350, widgetyBuildup['vyber_na_strechu'], 350),
-                (900, widgetyBuildup['label_front_accessories']),
-                (150, obrazek, 10, widgetyBuildup['vyber_front_accessories']),
-                (5),
-                (widgetyBuildup['label_rear'], 10, widgetyBuildup['label_prodluzovaci'], 10, widgetyBuildup['label_middle'], 10, widgetyBuildup['label_front']),
-                (widgetyBuildup['vyber_rear'], 10, widgetyBuildup['vyber_prodluzovaci'], 10, widgetyBuildup['vyber_middle'], 10, widgetyBuildup['vyber_front']),
-                (widgetyBuildup['cesta_rear'], 10, widgetyBuildup['cesta_prodluzovaci'], 10, widgetyBuildup['cesta_middle'], 10, widgetyBuildup['cesta_front']),
-                (15),
-                (500,create,reset,close)
-        )
+    # mainFrame = gui.VFrame (
+    #             (solver, 300, widgetyBuildup['label_na_strechu'], 300, add, edit),
+    #             (350, widgetyBuildup['vyber_na_strechu'], 350),
+    #             (900, widgetyBuildup['label_front_accessories']),
+    #             (150, obrazek, 10, widgetyBuildup['vyber_front_accessories']),
+    #             (5),
+    #             (widgetyBuildup['label_rear'], 10, widgetyBuildup['label_prodluzovaci'], 10, widgetyBuildup['label_middle'], 10, widgetyBuildup['label_front']),
+    #             (widgetyBuildup['vyber_rear'], 10, widgetyBuildup['vyber_prodluzovaci'], 10, widgetyBuildup['vyber_middle'], 10, widgetyBuildup['vyber_front']),
+    #             (widgetyBuildup['cesta_rear'], 10, widgetyBuildup['cesta_prodluzovaci'], 10, widgetyBuildup['cesta_middle'], 10, widgetyBuildup['cesta_front']),
+    #             (15),
+    #             (500,create,reset,close)
+    #     )
 
-    dialogModelBuildup.recess().add(mainFrame)
-    dialogModelBuildup.setButtonVisibile('ok',False)
-    dialogModelBuildup.setButtonVisibile('cancel',False)
+    main_frame = gui.HFrame(getWidgetStructure(hierarchie_typu["groups"]["FT groups"]), container=True, )
+    main_frame.maxheight = main_frame.reqheight
+
+    dialogModelBuildup.Hide()
+    dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
+    dialogModelBuildup.recess().add(main_frame)
+
+    dialogModelBuildup.setButtonVisibile('ok', False)
+    dialogModelBuildup.setButtonVisibile('cancel', False)
     dialogModelBuildup.show(width=1000, height=500)
 
 
@@ -354,7 +393,7 @@ def AddPartGUI():
     global widgetyAddPart
 
     widgetyAddPart['label_typ'] = gui.Label(text="Type of new part:")
-    widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ")
+    widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllTypes(hierarchie_typu, onlynames=True), name="vyber_typ")
 
     widgetyAddPart['label_cesta_OptiStruct'] = gui.Label(text="Path to OptiStruct:")
     widgetyAddPart['vyber_cesta_OptiStruct'] = gui.OpenFileEntry(placeholdertext="Path to OptiStruct")
@@ -433,13 +472,13 @@ def EditPartGUI():
 
 
     widgetyEditPart['label_typ_original'] = gui.Label(text="Original type of part:")
-    widgetyEditPart['vyber_typ_original'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_original", command=onSelectedTypeOriginal)
+    widgetyEditPart['vyber_typ_original'] = gui2.ComboBox(extractAllTypes(hierarchie_typu, onlynames=True), name="vyber_typ_original", command=onSelectedTypeOriginal)
 
     widgetyEditPart['label_nazev_original'] = gui.Label(text="Original name of part:")
     widgetyEditPart['vyber_nazev_original'] = gui2.ComboBox(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value, removeEmpty=True), name="vyber_typ_original", command=onSelectedNameOriginal)
 
     widgetyEditPart['label_typ_new'] = gui.Label(text="New type of part:")
-    widgetyEditPart['vyber_typ_new'] = gui2.ComboBox(extractAllNames(hierarchie_typu,onlynames=True), name="vyber_typ_new")
+    widgetyEditPart['vyber_typ_new'] = gui2.ComboBox(extractAllTypes(hierarchie_typu, onlynames=True), name="vyber_typ_new")
 
     widgetyEditPart['label_nazev_new'] = gui.Label(text="New name of part:")
     widgetyEditPart['vyber_nazev_new'] = gui.LineEdit(najdi_vsechny_daneho_typu(widgetyEditPart['vyber_typ_original'].value)[1])
