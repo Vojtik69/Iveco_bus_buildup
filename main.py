@@ -12,6 +12,14 @@ import inspect
 import os
 import sys
 
+# Získání cesty k aktuálně běžícímu skriptu
+current_dir = os.path.dirname(os.path.realpath(__file__))
+print(f"dirname: {current_dir}")
+# Přidání této cesty do sys.path
+sys.path.append(current_dir)
+
+import common
+
 print("Initiating...")
 
 parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=[0, 1, 2, 3],
@@ -35,7 +43,7 @@ dialogEditPart = gui.Dialog(caption="Edit Part")
 
 selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 
-
+solver_interface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 def find_all_of_type(searched_type, remove_empty=False):
 
@@ -272,7 +280,7 @@ def solverChange(event):
         # print(label)
         # print(widget)
 
-        # if type(widget) == gui2.ListBox:
+        # if it is Multiselection
         if isinstance(widget, gui2.ListBox):
             items = widget.items
             selectedIndexes = widget.selectedIndexes
@@ -305,6 +313,92 @@ def solverChange(event):
             except:
                 pass
 
+
+def save_setup():
+    def save_file():
+        data = {}
+        for label, widget in widgetyBuildup.items():
+            if isinstance(widget, gui2.ListBox):
+                items = widget.items
+                selectedIndexes = widget.selectedIndexes
+                if selectedIndexes:
+                    selectedItems = [items[index] for index in selectedIndexes]
+                else:
+                    selectedItems = []
+                data[label] = selectedItems
+            elif isinstance(widget, gui2.ComboBox):
+                selected_value = widget.value
+                data[label] = selected_value
+
+        with open(file_ent1.value, 'w') as file:
+            yaml.dump(data, file)
+        dialogSaveSetup.hide()
+        gui2.tellUser("Vehicle setup saved.")
+
+    label_1 = gui.Label(text="Select File :")
+    file_ent1 = gui.OpenFileEntry(placeholdertext='Setup file to save', filetypes='(*.yaml)')
+
+    save_setup_frame = gui.VFrame(label_1, file_ent1)
+
+    dialogSaveSetup = gui.Dialog(caption="Select setup file to save")
+    dialogSaveSetup.recess().add(save_setup_frame)
+    dialogSaveSetup._controls["ok"].command = save_file
+    dialogSaveSetup.show(height = 100)
+
+def load_setup():
+    def load_file():
+        resetModelBuildup(None)
+        with open(file_ent1.value, 'r') as file:
+            data = yaml.load(file, Loader=yaml.FullLoader)
+
+        for label, widget in widgetyBuildup.items():
+            if label in data:
+                if isinstance(widget, gui2.ListBox):
+                    items = widget.items
+                    selectedItems = data.get(label,[])
+                    for index, item in enumerate(widget.items):
+                        if item in selectedItems:
+                            print(f"selected items: {selectedItems}")
+                            print(f"index: {index}, {item}")
+                            widget.select(index)
+
+                elif isinstance(widget, gui2.ComboBox):
+                    selected_value = data.get(label,"---")
+                    widget.value = selected_value
+        dialogLoadSetup.hide()
+
+    label_1 = gui.Label(text="Select File :")
+    file_ent1 = gui.OpenFileEntry(placeholdertext='Setup file to open', filetypes='(*.yaml)')
+
+    load_setup_frame = gui.VFrame(label_1, file_ent1)
+
+    dialogLoadSetup = gui.Dialog(caption="Select setup file to open")
+    dialogLoadSetup.recess().add(load_setup_frame)
+    dialogLoadSetup._controls["ok"].command = load_file
+    dialogLoadSetup.show(height = 100)
+
+
+# Method called on clicking 'Reset'.
+def resetModelBuildup(event):
+    for label, widget in widgetyBuildup.items():
+        # print(label)
+        # print(widget)
+        typ = label.replace("vyber_", "")
+
+        # if it is multiselection ListBox
+        if isinstance(widget, gui2.ListBox):
+            widget.clear()
+            widget.append(find_all_of_type(typ, remove_empty=True))
+        # if it is onlyselection Combo
+        elif isinstance(widget, gui2.ComboBox):
+            values = find_all_of_type(typ, remove_empty=False)
+            print(f"values: {values}")
+            if len(values) == 1:
+                values = get_values_for_vehicle_spec(typ, remove_empty=False)
+            widget.setValues(values)
+            widget.value = "---"
+    return
+
 def ModelBuildupGUI():
     global dialogModelBuildup
 
@@ -316,6 +410,9 @@ def ModelBuildupGUI():
     # Method called on clicking 'Build-up'.
     def onBuildUpModelBuildup(event):
         print(f"BuildUp")
+        print(solver_interface[selectedSolver-2])
+        hw.evalTcl(f'::UserProfiles::LoadUserProfile {solver_interface[selectedSolver-2]}')
+        hw.evalTcl(f'puts "User profile changed"')
         for label, widget in widgetyBuildup.items():
             print(f"Widget: {widget}")
             # if type(widget) == gui2.ListBox:
@@ -346,39 +443,21 @@ def ModelBuildupGUI():
                     hw.evalTcl(f'source "{tcl_path}"; import_data "{path}"')
                 else:
                     print(f"selected_item: {selected_value}")
-        global dialogModelBuildup
-        dialogModelBuildup.Hide()
+        onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
         dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
     # Method called on clicking 'Reset'.
     def onResetModelBuildup(event):
-        for label, widget in widgetyBuildup.items():
-            # print(label)
-            # print(widget)
-            typ = label.replace("vyber_", "")
-            # if it is multiselection ListBox
-
-            # if type(widget) == gui2.ListBox:
-            if isinstance(widget, gui2.ListBox):
-                widget.clear()
-                widget.append(find_all_of_type(typ, remove_empty=True))
-            # if it is onlyselection Combo
-            elif isinstance(widget, gui2.ComboBox):
-                values = find_all_of_type(typ, remove_empty=False)
-                print(f"values: {values}")
-                if len(values) == 1:
-                    values = get_values_for_vehicle_spec(typ, remove_empty=False)
-                widget.setValues(values)
-                widget.value = "---"
+        resetModelBuildup(event)
         return
 
     close = gui.Button('Close', command=onCloseModelBuildup)
     buildup = gui.Button('Build-up', command=onBuildUpModelBuildup)
     reset = gui.Button('Reset', command=onResetModelBuildup)
     solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=solverChange, name="solver", width=150)
-    load = gui.Button('Load setup', command=onCloseModelBuildup)
-    save = gui.Button('Save setup', command=onBuildUpModelBuildup)
+    load = gui.Button('Load setup', command=load_setup)
+    save = gui.Button('Save setup', command=save_setup)
 
     vehicle_spec_frame = gui.HFrame(get_widget_vehicle_spec_structure(hierarchy_of_types["groups"]["vehicle_spec"]), container=True, maxwidth=500)
 
@@ -393,7 +472,6 @@ def ModelBuildupGUI():
         widget_frame,
         15,
         ("<->", buildup, reset, close)
-
     )
 
 
