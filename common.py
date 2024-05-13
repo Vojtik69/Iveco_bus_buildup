@@ -14,34 +14,34 @@ import sys
 
 print("loading common.py")
 
-def find_all_of_type(parts, selectedSolver, searched_type, remove_empty=False):
-
-    all_of_type = ["---"]
-    # print(searched_type)
-    if remove_empty:
-        all_of_type = []
+def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
+    # TODO: .sort()
+    allOfType = ["---"]
+    # print(searchedType)
+    if removeEmpty:
+        allOfType = []
     for index, row in parts.iterrows():
         # print(index)
-        if index[0] == searched_type and not pd.isna(index[selectedSolver]):
-            all_of_type.append(index[1])
-    return all_of_type
+        if index[0] == searchedType and not pd.isna(index[selectedSolver]):
+            allOfType.append(index[1])
+    return allOfType
 
 
-def find_path_to_name(hierarchy, name, current_path=[]):
+def findPathToName(hierarchy, name, currentPath=[]):
     # print(f"name: {name}")
     # print(f"hierarchy: {hierarchy}")
     if isinstance(hierarchy, list):
         for index, item in enumerate(hierarchy):
-            new_path = current_path + [index]
-            result = find_path_to_name(item, name, new_path)
+            newPath = currentPath + [index]
+            result = findPathToName(item, name, newPath)
             if result is not None:
                 return result
     elif isinstance(hierarchy, dict):
         for key, value in hierarchy.items():
-            new_path = current_path + [key]
+            newPath = currentPath + [key]
             if key == "name" and value == name:
-                return new_path[:-1]
-            result = find_path_to_name(value, name, new_path)
+                return newPath[:-1]
+            result = findPathToName(value, name, newPath)
             if result is not None:
                 return result
     return None
@@ -54,18 +54,18 @@ def find_path_to_name(hierarchy, name, current_path=[]):
 #     return include_file_path
 
 
-def get_element_by_path(hierarchy, path):
+def getElementByPath(hierarchy, path):
     element = hierarchy
     try:
-        for key_or_index in path:
-            element = element[key_or_index]
+        for keyOrIndex in path:
+            element = element[keyOrIndex]
         return element
     except (KeyError, IndexError):
         return None
 
 
-def find_superordinant_fts(hierarchy, name, superordinants = []):
-    path = find_path_to_name(hierarchy, name)
+def findSuperordinantFts(hierarchy, name, superordinants = []):
+    path = findPathToName(hierarchy, name)
     # print(f'path:{path}')
 
     if path is None:
@@ -75,95 +75,95 @@ def find_superordinant_fts(hierarchy, name, superordinants = []):
     # if it first level under vehicle_spec, use vehicle_spec as superordinant
     if len(path)>3:
         if path[-4] == "FT groups":
-            for vehicle_spec in get_element_by_path(hierarchy, ["groups", "vehicle_spec"]):
-                superordinants.append(vehicle_spec.get("name",""))
+            for vehicleSpec in getElementByPath(hierarchy, ["groups", "vehicle_spec"]):
+                superordinants.append(vehicleSpec.get("name",""))
             # print(f'superordinants:{superordinants}')
             return superordinants
 
-    level_up = -4 if path[-2] == "FTs" else -2
+    levelUp = -4 if path[-2] == "FTs" else -2
 
-    path_level_up = path[:level_up]
-    superordinant_element = get_element_by_path(hierarchy, path_level_up)
-    superordinant_name = get_element_by_path(hierarchy, path_level_up[:-2]).get("name", "")
-    for ft in superordinant_element.get("FTs", []):
+    pathLevelUp = path[:levelUp]
+    superordinantElement = getElementByPath(hierarchy, pathLevelUp)
+    superordinantName = getElementByPath(hierarchy, pathLevelUp[:-2]).get("name", "")
+    for ft in superordinantElement.get("FTs", []):
         superordinants.append(ft.get("name", ""))
-    if superordinant_element.get("skippable", False):
-        find_superordinant_fts(hierarchy, superordinant_name, superordinants)
+    if superordinantElement.get("skippable", False):
+        findSuperordinantFts(hierarchy, superordinantName, superordinants)
 
 
     # print(f'superordinants:{superordinants}')
     return superordinants
 
 
-def find_subordinant_fts(hierarchy, name, subordinants = None):
+def findSubordinantFts(hierarchy, name, subordinants = None):
     subordinants = [] if subordinants is None else subordinants
     caller = inspect.stack()[1]
     caller_name = caller.function
     print(f"{caller_name} called my_function")
     print(f"name: {name} - subordinants: {subordinants}")
-    path = find_path_to_name(hierarchy, name)
+    path = findPathToName(hierarchy, name)
     print(f"name: {name} - path: {path}")
     if path is None:
         return subordinants
 
     if path[-2] == "FTs":
-        level_up = -2
-        superordinant_element = get_element_by_path(hierarchy, path[:level_up])
-        groups_for_searching = superordinant_element.get("groups", [])
+        levelUp = -2
+        superordinantElement = getElementByPath(hierarchy, path[:levelUp])
+        groupsForSearching = superordinantElement.get("groups", [])
     elif path[-2] == "vehicle_spec":
-        groups_for_searching = hierarchy["groups"]["FT groups"]
+        groupsForSearching = hierarchy["groups"]["FT groups"]
     elif path[-2] == "groups":
-        level_up = -4
-        superordinant_element = get_element_by_path(hierarchy, path[:level_up])
-        groups_for_searching = superordinant_element.get("groups", [])
+        levelUp = -4
+        superordinantElement = getElementByPath(hierarchy, path[:levelUp])
+        groupsForSearching = superordinantElement.get("groups", [])
     elif path[-2] == "FT groups":
-        level_up = 0
-        superordinant_element = get_element_by_path(hierarchy, path)
-        groups_for_searching = superordinant_element.get("groups", [])
+        levelUp = 0
+        superordinantElement = getElementByPath(hierarchy, path)
+        groupsForSearching = superordinantElement.get("groups", [])
 
 
-    for group in groups_for_searching:
+    for group in groupsForSearching:
         for ft in group.get("FTs", []):
             subordinants.append(ft.get("name",""))
 
         if group.get("skippable", False):
-            find_subordinant_fts(hierarchy, group.get("name", ""), subordinants)
+            findSubordinantFts(hierarchy, group.get("name", ""), subordinants)
 
     return subordinants
 
 
-def update_subordinant_items(hierarchy, parts, widgetyBuildup, selectedSolver, name):
-    subordinants = find_subordinant_fts(hierarchy, name)
+def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, name):
+    subordinants = findSubordinantFts(hierarchy, name)
     print(f"subordinants in update_subordinant_items: {subordinants}")
     for subordinant in subordinants:
         # if it is multiselection ListBox
         if isinstance(widgetyBuildup[f'vyber_{subordinant}'], gui2.ListBox):
             widgetyBuildup["vyber_" + subordinant].clear()
             widgetyBuildup["vyber_" + subordinant].append(
-                find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=True))
+                findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=True))
         # if it is onlyselection Combo
         else:
             pass
             widgetyBuildup["vyber_" + subordinant].setValues(
-                find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False))
+                findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False))
 
 
-def find_path_to_include_file(part_db, selectedSolver, name):
+def findPathToIncludeFile(partDb, selectedSolver, name):
     print(f"name: {name}")
     if name != "---":
-        path = part_db[part_db.index.get_level_values(1) == name].index.get_level_values(selectedSolver).tolist()[0]
+        path = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(selectedSolver).tolist()[0]
     else:
         path = ""
     return path.replace("\\","/")
 
 
-def find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
+def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
     compatibles = [] if removeEmpty else ["---"]
-    superordinant_types = find_superordinant_fts(hierarchy, name, superordinants=[])
-    all_of_type = find_all_of_type(parts, selectedSolver, name, remove_empty=True)
+    superordinant_types = findSuperordinantFts(hierarchy, name, superordinants=[])
+    allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
     # print("find compatibles")
     print(selectedSolver)
-    for part in all_of_type:
+    for part in allOfType:
         compatible = True
         #if the part has not file for current solver, go next
 
@@ -171,10 +171,10 @@ def find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, name
             print("not compatible")
             continue
         # print(f"part: {part}")
-        for superordinant_type in superordinant_types:
+        for superordinantType in superordinant_types:
             # print(f"superordinant type: {superordinant_type}")
-            if widgetyBuildup[f'vyber_{superordinant_type}'].get() != "---":
-                if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinant_type}'].get())].iat[0, 0]):
+            if widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
+                if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]):
                     compatible = False
                     break
         if compatible:
@@ -182,9 +182,10 @@ def find_compatible_parts(hierarchy, parts, widgetyBuildup, selectedSolver, name
     return compatibles
 
 
-def solverChange(event, hierarchy_of_types, parts, widgetyBuildup, selectedSolver):
+def solverChange(event, hierarchyOfTypes, parts, widgetyBuildup):
+    global selectedSolver
     selectedSolver = event.widget.value
-    # print(selectedSolver)
+    print(f"solverchange() selectedSolver: {selectedSolver}")
     # print(widgetyBuildup)
     for label, widget in widgetyBuildup.items():
         # print(label)
@@ -201,8 +202,8 @@ def solverChange(event, hierarchy_of_types, parts, widgetyBuildup, selectedSolve
 
             widget.clear()
             widget.append(
-                find_compatible_parts(hierarchy_of_types, parts, widgetyBuildup, selectedSolver,
-                                      label.replace("vyber_", ""), removeEmpty=True))
+                findCompatibleParts(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver,
+                                    label.replace("vyber_", ""), removeEmpty=True))
 
             for index, item in enumerate(widget.items):
                 if item in selectedItems:
@@ -214,10 +215,10 @@ def solverChange(event, hierarchy_of_types, parts, widgetyBuildup, selectedSolve
         # if it is onlyselection Combo
         elif isinstance(widget, gui2.ComboBox):
             selected_value = widget.value
-            values = find_all_of_type(parts, selectedSolver, label.replace("vyber_", ""), remove_empty=False)
+            values = findAllOfType(parts, selectedSolver, label.replace("vyber_", ""), removeEmpty=False)
             print(f"values: {values}")
             if len(values) == 1:
-                values = get_values_for_vehicle_spec(parts, label.replace("vyber_", ""), remove_empty=False)
+                values = getValuesForVehicleSpec(parts, label.replace("vyber_", ""), removeEmpty=False)
             widget.setValues(values)
 
             try:
@@ -226,76 +227,76 @@ def solverChange(event, hierarchy_of_types, parts, widgetyBuildup, selectedSolve
                 pass
 
 
-def onSelectedCombo(event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver):
+def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
     print(f"event.widget.value: {event.widget.value}")
-    update_subordinant_items(hierarchy_of_types, parts, widgetyBuildup, selectedSolver, event.widget.name)
+    updateSubordinantItems(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver, event.widget.name)
     return
 
 
-def get_values_for_vehicle_spec(parts, vehicle_spec_type, remove_empty=False):
-    print(f"vehicle_spec_type: {vehicle_spec_type}")
-    all_values = [] if remove_empty else ["---"]
-    print(f"all_values: {all_values}")
-    vehicle_spec_columns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicle_spec_type]
-    all_values.extend([parts.columns[col][2] for col in vehicle_spec_columns])
-    print(f"all_values: {all_values}")
-    return all_values
+def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
+    print(f"vehicle_spec_type: {vehicleSpecType}")
+    allValues = [] if removeEmpty else ["---"]
+    print(f"all_values: {allValues}")
+    vehicleSpecColumns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicleSpecType]
+    allValues.extend([parts.columns[col][2] for col in vehicleSpecColumns])
+    print(f"all_values: {allValues}")
+    return allValues
 
 
-def get_widget_structure(structure, hierarchy_of_types, parts, selectedSolver, widgetyBuildup, levelWidgets=[],
-                         offset=0):
+def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=[],
+                       offset=0):
     subgrouping = True if levelWidgets else False
     for index, level in enumerate(structure):
-        label_group = gui.Label(text=level.get("name"), font={'bold': True})
+        labelGroup = gui.Label(text=level.get("name"), font={'bold': True})
         if subgrouping:
-            levelWidgets[-1].append([(10, (offset*10, label_group))])
+            levelWidgets[-1].append([(10, (offset*10, labelGroup))])
         else:
-            levelWidgets.append([(label_group)])
+            levelWidgets.append([(labelGroup)])
         for ft in level.get("FTs", []):
-            label_objekt = gui.Label(text=ft.get("name", ""))
+            labelObjekt = gui.Label(text=ft.get("name", ""))
 
             if ft.get("multiselection", False):
-                vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
-                vyber_objekt.append(find_all_of_type(parts, selectedSolver, ft.get('name', ""), remove_empty=True))
+                vyberObjekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
+                vyberObjekt.append(findAllOfType(parts, selectedSolver, ft.get('name', ""), removeEmpty=True))
             else:
-                vyber_objekt = gui2.ComboBox(
-                    find_all_of_type(parts, selectedSolver, ft.get('name', ""), remove_empty=False), command=lambda event: onSelectedCombo(
-                event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver), name=ft.get('name', ""), width=150 - (offset * 5))
+                vyberObjekt = gui2.ComboBox(
+                    findAllOfType(parts, selectedSolver, ft.get('name', ""), removeEmpty=False), command=lambda event: onSelectedCombo(
+                event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver), name=ft.get('name', ""), width=150 - (offset * 5))
 
-            widgetyBuildup[f'label_{ft.get("name", "")}'] = label_objekt
-            widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyber_objekt
+            widgetyBuildup[f'label_{ft.get("name", "")}'] = labelObjekt
+            widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyberObjekt
 
             levelWidgets[-1].append(
                 (offset*10, widgetyBuildup[f'label_{ft.get("name", "")}'], 5, widgetyBuildup[f'vyber_{ft.get("name", "")}']))
         if level.get("groups"):
-            get_widget_structure(level['groups'], hierarchy_of_types, parts, selectedSolver, widgetyBuildup,
-                                 levelWidgets, offset=offset + 1)
+            getWidgetStructure(level['groups'], hierarchyOfTypes, parts, selectedSolver, widgetyBuildup,
+                               levelWidgets, offset=offset + 1)
 
     return levelWidgets
 
 
-def get_widget_vehicle_spec_structure(structure, hierarchy_of_types, parts, widgetyBuildup, selectedSolver,
-                                      vehicle_spec_Widgets=[]):
-    for vehicle_spec in structure:
-        label_objekt = gui.Label(text=vehicle_spec.get("name", ""), font={'bold': True})
+def getWidgetVehicleSpecStructure(structure, hierarchyOfTypes, parts, widgetyBuildup, selectedSolver,
+                                  vehicleSpecWidgets=[]):
+    for vehicleSpec in structure:
+        labelObjekt = gui.Label(text=vehicleSpec.get("name", ""), font={'bold': True})
 
-        if vehicle_spec.get("multiselection", False):
-            vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicle_spec.get('name', ""), width=150)
+        if vehicleSpec.get("multiselection", False):
+            vyberObjekt = gui2.ListBox(selectionMode="ExtendedSelection", name=vehicleSpec.get('name', ""), width=150)
         else:
-            vyber_objekt = gui2.ComboBox(
-                get_values_for_vehicle_spec(parts, vehicle_spec.get('name', ""), remove_empty=False), command=lambda event: onSelectedCombo(
-                event, parts, hierarchy_of_types, widgetyBuildup, selectedSolver), name=vehicle_spec.get('name', ""), width=150)
+            vyberObjekt = gui2.ComboBox(
+                getValuesForVehicleSpec(parts, vehicleSpec.get('name', ""), removeEmpty=False), command=lambda event: onSelectedCombo(
+                event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver), name=vehicleSpec.get('name', ""), width=150)
 
-        widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'] = label_objekt
-        widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'] = vyber_objekt
+        widgetyBuildup[f'label_{vehicleSpec.get("name", "")}'] = labelObjekt
+        widgetyBuildup[f'vyber_{vehicleSpec.get("name", "")}'] = vyberObjekt
 
-        vehicle_spec_Widgets.append([[(widgetyBuildup[f'label_{vehicle_spec.get("name", "")}'],widgetyBuildup[f'vyber_{vehicle_spec.get("name", "")}'])]])
+        vehicleSpecWidgets.append([[(widgetyBuildup[f'label_{vehicleSpec.get("name", "")}'], widgetyBuildup[f'vyber_{vehicleSpec.get("name", "")}'])]])
 
-    return vehicle_spec_Widgets
+    return vehicleSpecWidgets
 
 
-def save_setup(widgetyBuildup):
-    def save_file():
+def saveSetup(event, widgetyBuildup):
+    def saveFile(event, widgetyBuildup):
         data = {}
         for label, widget in widgetyBuildup.items():
             if isinstance(widget, gui2.ListBox):
@@ -307,29 +308,29 @@ def save_setup(widgetyBuildup):
                     selectedItems = []
                 data[label] = selectedItems
             elif isinstance(widget, gui2.ComboBox):
-                selected_value = widget.value
-                data[label] = selected_value
+                selectedValue = widget.value
+                data[label] = selectedValue
 
-        with open(file_ent1.value, 'w') as file:
+        with open(fileEnt1.value, 'w') as file:
             yaml.dump(data, file)
         dialogSaveSetup.hide()
         gui2.tellUser("Vehicle setup saved.")
 
-    label_1 = gui.Label(text="Select File :")
-    file_ent1 = gui.OpenFileEntry(placeholdertext='Setup file to save', filetypes='(*.yaml)')
+    label1 = gui.Label(text="Select File :")
+    fileEnt1 = gui.SaveFileEntry(placeholdertext='Setup file to save', filetypes='(*.yaml)')
 
-    save_setup_frame = gui.VFrame(label_1, file_ent1)
+    saveSetupFrame = gui.VFrame(label1, fileEnt1)
 
     dialogSaveSetup = gui.Dialog(caption="Select setup file to save")
-    dialogSaveSetup.recess().add(save_setup_frame)
-    dialogSaveSetup._controls["ok"].command = save_file
+    dialogSaveSetup.recess().add(saveSetupFrame)
+    dialogSaveSetup._controls["ok"].command = lambda event: saveFile(event, widgetyBuildup)
     dialogSaveSetup.show(height = 100)
 
 
-def load_setup(widgetyBuildup):
-    def load_file():
+def loadSetup(event, widgetyBuildup, selectedSolver):
+    def loadFile():
         resetModelBuildup(None, widgetyBuildup, selectedSolver, parts)
-        with open(file_ent1.value, 'r') as file:
+        with open(fileEnt1.value, 'r') as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
         for label, widget in widgetyBuildup.items():
@@ -348,14 +349,14 @@ def load_setup(widgetyBuildup):
                     widget.value = selected_value
         dialogLoadSetup.hide()
 
-    label_1 = gui.Label(text="Select File :")
-    file_ent1 = gui.OpenFileEntry(placeholdertext='Setup file to open', filetypes='(*.yaml)')
+    label1 = gui.Label(text="Select File :")
+    fileEnt1 = gui.OpenFileEntry(placeholdertext='Setup file to open', filetypes='(*.yaml)')
 
-    load_setup_frame = gui.VFrame(label_1, file_ent1)
+    loadSetupFrame = gui.VFrame(label1, fileEnt1)
 
     dialogLoadSetup = gui.Dialog(caption="Select setup file to open")
-    dialogLoadSetup.recess().add(load_setup_frame)
-    dialogLoadSetup._controls["ok"].command = load_file
+    dialogLoadSetup.recess().add(loadSetupFrame)
+    dialogLoadSetup._controls["ok"].command = loadFile
     dialogLoadSetup.show(height = 100)
 
 
@@ -369,13 +370,13 @@ def resetModelBuildup(event, widgetyBuildup, selectedSolver, parts):
         # if it is multiselection ListBox
         if isinstance(widget, gui2.ListBox):
             widget.clear()
-            widget.append(find_all_of_type(parts, selectedSolver, typ, remove_empty=True))
+            widget.append(findAllOfType(parts, selectedSolver, typ, removeEmpty=True))
         # if it is onlyselection Combo
         elif isinstance(widget, gui2.ComboBox):
-            values = find_all_of_type(parts, selectedSolver, typ, remove_empty=False)
+            values = findAllOfType(parts, selectedSolver, typ, removeEmpty=False)
             print(f"values: {values}")
             if len(values) == 1:
-                values = get_values_for_vehicle_spec(parts, typ, remove_empty=False)
+                values = getValuesForVehicleSpec(parts, typ, removeEmpty=False)
             widget.setValues(values)
             widget.value = "---"
     return
@@ -386,5 +387,14 @@ parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_p
 parts.columns.names = [None] * len(parts.columns.names)
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
-    hierarchy_of_types = yaml.safe_load(file)
-tcl_path = "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
+    hierarchyOfTypes = yaml.safe_load(file)
+tclPath = "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
+selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
+solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
+
+class Config:
+    def __init__(self, selectedSolver):
+        self.selectedSolver = selectedSolver
+
+config_instance = Config(2)
+

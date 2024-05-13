@@ -61,7 +61,7 @@ def getWidgetStructure(struktura,levelWidgets=[]):
             if ft.get("multiselection", False):
                 vyber_objekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""))
             else:
-                #TODO: vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(ft.get('name',""),remove_empty=False), command=onSelectedCombo, name=ft.get('name',""))
+                #TODO: vyber_objekt = gui2.ComboBox(najdi_vsechny_daneho_typu(ft.get('name',""),removeEmpty=False), command=onSelectedCombo, name=ft.get('name',""))
                 vyber_objekt = gui2.ComboBox([], name=ft.get('name', ""))
 
             print(ft.get("name",""))
