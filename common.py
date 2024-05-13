@@ -2,15 +2,9 @@ from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
-import os
-import itertools
-from functools import partial
 import yaml
-import os.path
 import pandas as pd
 import inspect
-import os
-import sys
 
 print("loading common.py")
 
@@ -182,51 +176,6 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
     return compatibles
 
 
-def solverChange(event, hierarchyOfTypes, parts, widgetyBuildup):
-    global selectedSolver
-    selectedSolver = event.widget.value
-    print(f"solverchange() selectedSolver: {selectedSolver}")
-    # print(widgetyBuildup)
-    for label, widget in widgetyBuildup.items():
-        # print(label)
-        # print(widget)
-
-        # if it is Multiselection
-        if isinstance(widget, gui2.ListBox):
-            items = widget.items
-            selectedIndexes = widget.selectedIndexes
-            if selectedIndexes:
-                selectedItems = [items[index] for index in selectedIndexes]
-            else:
-                selectedItems = []
-
-            widget.clear()
-            widget.append(
-                findCompatibleParts(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver,
-                                    label.replace("vyber_", ""), removeEmpty=True))
-
-            for index, item in enumerate(widget.items):
-                if item in selectedItems:
-                    print(f"selected items: {selectedItems}")
-                    print(f"index: {index}, {item}")
-                    widget.select(index)
-
-
-        # if it is onlyselection Combo
-        elif isinstance(widget, gui2.ComboBox):
-            selected_value = widget.value
-            values = findAllOfType(parts, selectedSolver, label.replace("vyber_", ""), removeEmpty=False)
-            print(f"values: {values}")
-            if len(values) == 1:
-                values = getValuesForVehicleSpec(parts, label.replace("vyber_", ""), removeEmpty=False)
-            widget.setValues(values)
-
-            try:
-                widget.value = selected_value
-            except:
-                pass
-
-
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
     print(f"event.widget.value: {event.widget.value}")
     updateSubordinantItems(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver, event.widget.name)
@@ -389,12 +338,6 @@ parts.columns.names = [None] * len(parts.columns.names)
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchyOfTypes = yaml.safe_load(file)
 tclPath = "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
-selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
-solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
-class Config:
-    def __init__(self, selectedSolver):
-        self.selectedSolver = selectedSolver
 
-config_instance = Config(2)
 
