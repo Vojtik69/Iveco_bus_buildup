@@ -14,7 +14,11 @@ set filename [file tail $file_path]
 *setcurrentinclude 0 ""
 }
 
-proc test_write {} {puts "test printout"}
+proc changing_interface_finished {} {
+    global global_variable
+    set global_variable true
+    puts "nastavil jsem global_variable true"
+}
 
 #set file_path
 #import_data "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/02_reduced_BIW_model/first_includes/front_mid.inc"
