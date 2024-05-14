@@ -88,8 +88,9 @@ def modelBuildupGui():
         print(f"BuildUp")
         print(f"selectedSolver: {selectedSolver}")
         print(f"solverInterface: {solverInterface[selectedSolver - 2]}")
-        hw.evalTcl(f'source "{tclPath}"; puts "jdu na to"; set global_variable false; ::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]} changing_interface_finished; vwait global_variable; puts "jdu dal"')
-        hw.evalTcl(f' puts "konec"; *start_batch_import 2')
+        # Using "changing_interface_finished; vwait global_variable" is necessary because of bug in HyperMesh which continues in next Tcl commands before the Solver Interface is completely changed
+        hw.evalTcl(f'source "{tclPath}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]} changing_interface_finished; vwait change_finished')
+        hw.evalTcl(f'*start_batch_import 2')
         for label, widget in widgetyBuildup.items():
             print(f"Widget: {widget}")
             # if type(widget) == gui2.ListBox:

@@ -15,9 +15,8 @@ set filename [file tail $file_path]
 }
 
 proc changing_interface_finished {} {
-    global global_variable
-    set global_variable true
-    puts "nastavil jsem global_variable true"
+    global change_finished
+    set change_finished true
 }
 
 #set file_path
