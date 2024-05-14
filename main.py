@@ -90,6 +90,7 @@ def modelBuildupGui():
         print(f"solverInterface: {solverInterface[selectedSolver - 2]}")
         hw.evalTcl(f'::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]}')
         hw.evalTcl(f'puts "User profile changed"')
+        hw.evalTcl(f'*start_batch_import 2')
         for label, widget in widgetyBuildup.items():
             print(f"Widget: {widget}")
             # if type(widget) == gui2.ListBox:
@@ -106,7 +107,10 @@ def modelBuildupGui():
                     if selectedItem != "---":
                         path = findPathToIncludeFile(parts, selectedSolver, selectedItem)
                         print(f"path: {path}")
-                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                        if os.path.exists(path):
+                            hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                        else:
+                            print(f"Include file {path} does not exist. Skipping this include.")
                     else:
                         print(f"selectedItem: {selectedItem}")
 
@@ -117,9 +121,17 @@ def modelBuildupGui():
                 if selectedValue != "---":
                     path = findPathToIncludeFile(parts, selectedSolver, selectedValue)
                     print(f"path: {path}")
-                    hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                    if os.path.exists(path):
+                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                    else:
+                        print(f"Include file {path} does not exist. Skipping this include.")
                 else:
                     print(f"selectedItem: {selectedValue}")
+        print("ending batch import")
+        hw.evalTcl(f'puts "Going to end batch import"')
+        hw.evalTcl(f'*end_batch_import')
+        print("realizing connectors")
+        hw.evalTcl(f'source "{tclPath}"; realize_connectors')
         onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
         dialogModelBuildup = gui.Dialog(caption="Bus model build-up")

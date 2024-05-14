@@ -8,8 +8,13 @@ import inspect
 
 print("loading common.py")
 
+def sort_alphabetically(items):
+    if hasattr(items, '__iter__'):
+        return sorted(items)
+    else:
+        return items
+
 def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
-    # TODO: .sort()
     allOfType = ["---"]
     # print(searchedType)
     if removeEmpty:
@@ -18,7 +23,7 @@ def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
         # print(index)
         if index[0] == searchedType and not pd.isna(index[selectedSolver]):
             allOfType.append(index[1])
-    return allOfType
+    return sort_alphabetically(allOfType)
 
 
 def findPathToName(hierarchy, name, currentPath=[]):
@@ -173,7 +178,7 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
                     break
         if compatible:
             compatibles.append(part)
-    return compatibles
+    return sort_alphabetically(compatibles)
 
 
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
@@ -189,7 +194,7 @@ def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
     vehicleSpecColumns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicleSpecType]
     allValues.extend([parts.columns[col][2] for col in vehicleSpecColumns])
     print(f"all_values: {allValues}")
-    return allValues
+    return sort_alphabetically(allValues)
 
 
 def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=[],

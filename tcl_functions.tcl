@@ -1,6 +1,5 @@
 proc import_data {file_path} {
 set filename [file tail $file_path]
-*start_batch_import 2
 *createinclude 0 $filename $file_path 0
 *attributeupdatestring cards 1 5015 20 1 0 $filename
 *createstringarray 23 "RadiossBlock " "Radioss2023 " "~D01_OPTION 1 " "ASSIGNPROP_BYHMCOMMENTS " \
@@ -13,7 +12,6 @@ set filename [file tail $file_path]
   "SLIPRINGS_DISPLAY_SKIP "
 *feinputwithdata2 "\#radioss\\radiossblk" $file_path 0 0 0 0 0 1 23 1 0
 *setcurrentinclude 0 ""
-*end_batch_import
 }
 
 proc test_write {} {puts "test printout"}
@@ -21,7 +19,12 @@ proc test_write {} {puts "test printout"}
 #set file_path
 #import_data "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/02_reduced_BIW_model/first_includes/front_mid.inc"
 
-
+proc realize_connectors {} {
+*clearmark connectors 1
+*createmark connectors 1 "all"
+*CE_Realize 1
+*clearmark connectors 1
+}
 
 #====import include =====
 #*start_batch_import 2
