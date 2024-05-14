@@ -158,10 +158,10 @@ def findPathToIncludeFile(partDb, selectedSolver, name):
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
     compatibles = [] if removeEmpty else ["---"]
-    superordinant_types = findSuperordinantFts(hierarchy, name, superordinants=[])
+    superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
-    # print("find compatibles")
-    print(selectedSolver)
+    print("find compatibles")
+    # print(f"selectedSolver: {selectedSolver}")
     for part in allOfType:
         compatible = True
         #if the part has not file for current solver, go next
@@ -169,15 +169,20 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
         if pd.isna(parts[parts.index.get_level_values(1) == part].index.get_level_values(selectedSolver)):
             print("not compatible")
             continue
-        # print(f"part: {part}")
-        for superordinantType in superordinant_types:
-            # print(f"superordinant type: {superordinant_type}")
+        print(f"part: {part}")
+        for superordinantType in superordinantTypes:
+            # print(f"superordinant type: {superordinantType}")
             if widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
+                # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0])
+                # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())])
+                # print(widgetyBuildup[f'vyber_{superordinantType}'].get())
                 if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]):
                     compatible = False
+                    # print(f"compatible: {compatible}")
                     break
         if compatible:
             compatibles.append(part)
+    print(f"compatibles: {sort_alphabetically(compatibles)}")
     return sort_alphabetically(compatibles)
 
 

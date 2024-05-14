@@ -6,9 +6,9 @@ FT 1 Lorem ipsum,var_D_12,C:/var_D_12_os.inc,C:/var_D_12_radioss.inc,1,1,1,1,1,1
 FT 1 Lorem ipsum,var_35,C:/var_35_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\02_reduced_BIW_model\first_includes\Rear.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 2,FT2_var3,C:/FT2_var3_os.inc,C:/FT2_var3_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 2,FT2_var1,C:/FT2_var1_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\03_connector_test\Uzel\includes_with_connectors_v1\Chassis_Diagonals_3mm_S355JOH.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-FT 4,FT4_var1,C:/FT4_var1_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\03_connector_test\Uzel\includes_with_connectors_v1\Chassis_Sheets_3mm_S355MC.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-FT 4,FT4_var2,C:/FT4_var1_os.inc,C:/FT4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
+FT 4,FT4_var1,C:/FT4_var1_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\03_connector_test\Uzel\includes_with_connectors_v1\Chassis_Sheets_3mm_S355MC.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+FT 4,FT4_var2,C:/FT4_var1_os.inc,C:/FT4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 FT 4,FT_4_var1,C:/FT_4_var1_os.inc,C:/FT_4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-FT 5,FT5_var1,C:/FT5_var1_os.inc,C:/FT5_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-Chassis Others,Other1,C:/Other1_os.inc,C:/Other1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-Chassis Others,Other2,C:/Other2_os.inc,C:/Other2_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
+FT 5,FT5_var1,,C:/FT5_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
+Chassis Others,Other1,C:/Other1_os.inc,C:/Other1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,
+Chassis Others,Other2,C:/Other2_os.inc,C:/Other2_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,
