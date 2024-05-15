@@ -1,8 +1,0 @@
-<root>
-  <button tag="Ext_Filemenu_HM1" text="Custom Entry 1" tooltip="Custom file menu entry 1" image="fileHelpStrip-24.png">
-    <item tag="Ext_Filemenu_HM1_A" text="Custom Option A" hint="Custom file menu sub-entry A" command="tcl: tk_messageBox -title &quot;Option A&quot; -message &quot;Option A is working.&quot;"/>
-	<item tag="Ext_Filemenu_HM1_B" text="Custom Option B" hint="Custom file menu sub-entry B" command="tcl: tk_messageBox -title &quot;Option B&quot; -message &quot;Option B is working.&quot;"/>
-  </button>
-  <button tag="Ext_Filemenu_HM2" text="Custom Entry 2" tooltip="Custom file menu entry 2" image="fileOpenStrip-24.png" command="tcl: tk_messageBox -title &quot;Custom Entry 2&quot; -message &quot;Placeholder for a custom open procedure.&quot;">
-  </button>
-</root>
