@@ -205,8 +205,10 @@ def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
 def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=[],
                        offset=0):
     subgrouping = True if levelWidgets else False
+    # every iteration here is new column
     for index, level in enumerate(structure):
         labelGroup = gui.Label(text=level.get("name"), font={'bold': True})
+        # are we in main level or any of sublevels?
         if subgrouping:
             levelWidgets[-1].append([(10, (offset*10, labelGroup))])
         else:
@@ -225,13 +227,16 @@ def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widge
             widgetyBuildup[f'label_{ft.get("name", "")}'] = labelObjekt
             widgetyBuildup[f'vyber_{ft.get("name", "")}'] = vyberObjekt
 
+            # add new line with label and choose
             levelWidgets[-1].append(
                 (offset*10, widgetyBuildup[f'label_{ft.get("name", "")}'], 5, widgetyBuildup[f'vyber_{ft.get("name", "")}']))
         if level.get("groups"):
             getWidgetStructure(level['groups'], hierarchyOfTypes, parts, selectedSolver, widgetyBuildup,
                                levelWidgets, offset=offset + 1)
 
-    return levelWidgets
+        levelWidgets[-1].append("<->")
+
+    return levelWidgets, index
 
 
 def getWidgetVehicleSpecStructure(structure, hierarchyOfTypes, parts, widgetyBuildup, selectedSolver,

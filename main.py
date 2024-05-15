@@ -28,6 +28,8 @@ dialogEditPart = gui.Dialog(caption="Edit Part")
 selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
+columnWidth = 230
+
 
 def modelBuildupGui():
     global dialogModelBuildup
@@ -157,9 +159,10 @@ def modelBuildupGui():
         getWidgetVehicleSpecStructure(hierarchyOfTypes["groups"]["vehicle_spec"], hierarchyOfTypes, parts,
                                       widgetyBuildup, selectedSolver), container=True, maxwidth=500)
 
-    widgetFrame = gui.HFrame(
-        getWidgetStructure(hierarchyOfTypes["groups"]["FT groups"], hierarchyOfTypes, parts, selectedSolver,
-                           widgetyBuildup), container=True, )
+    widgetStructure, columns = getWidgetStructure(hierarchyOfTypes["groups"]["FT groups"], hierarchyOfTypes, parts, selectedSolver,
+                           widgetyBuildup)
+
+    widgetFrame = gui.HFrame(widgetStructure, container=True, )
     widgetFrame.maxheight = widgetFrame.reqheight
 
     mainFrame = gui.VFrame(
@@ -180,13 +183,16 @@ def modelBuildupGui():
 
     # mainFrame.move(x = 1, y = 1)
 
+    width = columns * columnWidth
+    height = widgetFrame.maxheight + 100
+
+    return width, height
+
+width, height = modelBuildupGui()
 def mainFunc(*args, **kwargs):
     global dialogModelBuildup
-
-    dialogModelBuildup.show(width=1000, height=500)
+    dialogModelBuildup.show(width=width, height=height)
     print("Initiated...")
-
-modelBuildupGui()
 
 if __name__ == "__main__":
     mainFunc()
