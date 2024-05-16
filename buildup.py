@@ -18,12 +18,10 @@ print("Initiating...")
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
-widgetyAddPart = {}
-widgetyEditPart = {}
+
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
-dialogAddPart = gui.Dialog(caption="Add Part")
-dialogEditPart = gui.Dialog(caption="Edit Part")
+
 
 selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']

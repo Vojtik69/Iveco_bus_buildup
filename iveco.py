@@ -35,12 +35,12 @@ def mainFunc(*args,**kwargs):
 def extractAllTypes(data, onlynames=False):
     names = []
     # for item in hierarchy:
-    #     if onlynames:
+    #     if onlyNames:
     #         names.append(item['name'])
     #     else:
     #         names.append([item['name'], item['multiselection']])
     #     if 'subordinates' in item:
-    #         names.extend(extractAllTypes(item['subordinates'], onlynames=onlynames))
+    #         names.extend(extractAllTypes(item['subordinates'], onlyNames=onlyNames))
     return names
 
 def getWidgetStructure(struktura,levelWidgets=[]):

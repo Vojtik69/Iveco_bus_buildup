@@ -345,6 +345,29 @@ def resetModelBuildup(event, widgetyBuildup, selectedSolver, parts):
             widget.value = "---"
     return
 
+def extractAllTypes(hierarchy, onlyNames=False):
+    names = [] if onlyNames else ["---"]
+
+    def extract_names(groups):
+        for group in groups:
+            if 'FTs' in group:
+                for ft in group['FTs']:
+                    names.append(ft['name'])
+            if 'groups' in group:
+                extract_names(group['groups'])
+
+    extract_names(hierarchy['groups']['FT groups'])
+
+    return sort_alphabetically(names)
+
+
+def findAllParts(parts):
+    allParts = []
+    for index, row in parts.iterrows():
+        print(index[1])
+        allParts.append(index[1])  # přidá obsah druhého sloupce indexu
+    return allParts
+
 
 parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=[0, 1, 2, 3],
                     header=[0, 1, 2], skipinitialspace=True)
