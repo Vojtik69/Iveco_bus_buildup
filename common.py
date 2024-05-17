@@ -8,12 +8,18 @@ import yaml
 import pandas as pd
 import inspect
 import os
+import re
 
 print("loading common.py")
 
-def sort_alphabetically(items):
-    if hasattr(items, '__iter__'):
-        return sorted(items)
+def alphanum_key(s):
+    # Rozdělí řetězec na části, kde čísla jsou konvertována na int a zbytek zůstává jako string
+    return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
+
+def sortAlphabetically(items):
+    if hasattr(items, '__iter__') and not isinstance(items, str):
+        # Použije přirozené řazení s použitím alphanum_key jako klíčové funkce
+        return sorted(items, key=alphanum_key)
     else:
         return items
 
@@ -31,7 +37,7 @@ def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
             else:
                 allOfType.append(index[1])
 
-    return sort_alphabetically(allOfType)
+    return sortAlphabetically(allOfType)
 
 
 def findPathToName(hierarchy, name, currentPath=[]):
@@ -138,6 +144,13 @@ def findSubordinantFts(hierarchy, name, subordinants = None):
 
     return subordinants
 
+def getVehicleSpecTypes(hierarchy):
+    allSpecTypes = []
+    for specType in hierarchy["groups"]["vehicle_spec"]:
+        allSpecTypes.append(specType["name"])
+    print(f'allSpecTypes: {allSpecTypes}')
+    return allSpecTypes
+
 
 def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, name):
     subordinants = findSubordinantFts(hierarchy, name)
@@ -190,8 +203,8 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
                     break
         if compatible:
             compatibles.append(part)
-    print(f"compatibles: {sort_alphabetically(compatibles)}")
-    return sort_alphabetically(compatibles)
+    print(f"compatibles: {sortAlphabetically(compatibles)}")
+    return sortAlphabetically(compatibles)
 
 
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
@@ -207,7 +220,7 @@ def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
     vehicleSpecColumns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicleSpecType]
     allValues.extend([parts.columns[col][2] for col in vehicleSpecColumns])
     print(f"all_values: {allValues}")
-    return sort_alphabetically(allValues)
+    return sortAlphabetically(allValues)
 
 
 def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=[],
@@ -366,7 +379,7 @@ def extractAllTypes(hierarchy, onlyNames=False):
 
     extract_names(hierarchy['groups']['FT groups'])
     print(names)
-    return sort_alphabetically(names)
+    return sortAlphabetically(names)
 
 
 def findAllParts(parts):
