@@ -9,16 +9,11 @@
 	<entry name="description"		value="Extension helps to build customized complete model from partial includes." />
 	<entry name="supportedClient"	value="HyperWorksDesktop" />
 	<entry name="documentation"		value="documentation/ExtensionDemo.htm" />
-	<entry name="script"			value="" />
 	
 	<section name="profile" value="HyperMesh">
 		<entry name="ribbonxml"		value="hm/hm-ribbon.xml" />
-		<entry name="script"		value="iveco.py" />
-		<entry name="toolbars"		value="hm/toolbars" />
 		<entry name="contexts"		value="hm/contexts" />
 		<entry name="workflowhelp"	value="hm/contexts/workflowhelp.xml" />
-		<entry name="filemenu"		value="hm/hm-filemenu.xml"/>
 	</section>
-
 
 </section>
