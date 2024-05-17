@@ -19,10 +19,8 @@ from compatibility import SetCompatibilityGUI, showCompatibilityGUI
 print("Initiating AddPart...")
 
 widgetyAddPart = {}
-widgetyEditPart = {}
 
 dialogAddPart = gui.Dialog(caption="Add Part")
-dialogEditPart = gui.Dialog(caption="Edit Part")
 
 width = 200
 height = 200
