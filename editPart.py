@@ -65,7 +65,6 @@ def EditPartGUI():
     def onCloseEditPartGUI(event):
         global dialogEditPart
         dialogEditPart.Hide()
-        dialogEditPart = gui.Dialog(caption  = "Edit Part")
 
     def onResetEditPartGUI(event):
         widgetyEditPart['vyber_typ_original'].value = ""
@@ -76,7 +75,7 @@ def EditPartGUI():
         widgetyEditPart['vyber_cesta_new_Radioss'].value = findPathToIncludeFile(parts, 3, widgetyEditPart['vyber_nazev_original'].get())
 
     def checkNotEmpty():
-        if widgetyEditPart['vyber_nazev_new'].value in findAllParts():
+        if widgetyEditPart['vyber_nazev_new'].value in findAllParts(parts):
             if widgetyEditPart['vyber_nazev_original'].value != widgetyEditPart['vyber_nazev_new'].value:
                 gui2.tellUser("New name of part is not unique")
                 return
@@ -94,7 +93,7 @@ def EditPartGUI():
                 gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
                 return
 
-        SetCompatibilityGUI(widgetyEditPart['vyber_typ_new'].value)
+        showCompatibilityGUI(widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, widgetyEditPart['vyber_nazev_original'].value)
 
 
 

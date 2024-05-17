@@ -10,13 +10,13 @@ from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
 
-from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec
+from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility
 
 print("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
-def SetCompatibilityGUI(typ, hierarchyOfTypes, parts):
+def SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
     global dialogSetCompatibility
     boxesParents = []
     boxesSubordinants = []
@@ -43,8 +43,13 @@ def SetCompatibilityGUI(typ, hierarchyOfTypes, parts):
         row = 0
         partList = getValuesForVehicleSpec(parts, type, removeEmpty=True) if spec else findAllOfType(parts,None, type, removeEmpty=True)
         for part in partList:
+            if partName:
+                compatibilityValue = findCompatibility(parts, partName, part)
+            else:
+                compatibilityValue = '1'
+
             root.setData(row, 0, value=part, type='string', state='disabled')
-            root.setData(row, 1, value='1', type='string', state='enabled')
+            root.setData(row, 1, value=compatibilityValue, type='string', state='enabled')
             row += 1
 
         table = gui.TableView()
@@ -118,7 +123,7 @@ def SetCompatibilityGUI(typ, hierarchyOfTypes, parts):
     dialogSetCompatibility.setButtonVisibile('cancel', False)
     dialogSetCompatibility.show(width=900, height=500)
 
-def showCompatibilityGUI(typ, hierarchyOfTypes, parts):
+def showCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
     global dialogSetCompatibility
     dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
-    SetCompatibilityGUI(typ, hierarchyOfTypes, parts)
+    SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName)
