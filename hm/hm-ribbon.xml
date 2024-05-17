@@ -1,8 +1,8 @@
 <root>
     <actionlist>
-        <action tag="BuildUp" text="Build Up" tooltip="Build Up of Model" image="Buildup-80.png" command="py: $EXTENSION_DIR.buildup.mainFunc()"/>
-        <action tag="Add" text="Add Part" tooltip="Add a new part to database" image="Add-80.png" command="py: $EXTENSION_DIR.addPart.mainFunc()"/>
-        <action tag="Edit" text="Edit Part" tooltip="Edit existing Part in database" image="Edit-80.png" command="py: $EXTENSION_DIR.editPart.mainFunc()"/>
+        <action tag="BuildUp" text="Build Up" tooltip="Build Up of Model" image="buildup.png" command="py: $EXTENSION_DIR.buildup.mainFunc()"/>
+        <action tag="Add" text="Add Part" tooltip="Add a new part to database" image="addPart.png" command="py: $EXTENSION_DIR.addPart.mainFunc()"/>
+        <action tag="Edit" text="Edit Part" tooltip="Edit existing Part in database" image="editPart.png" command="py: $EXTENSION_DIR.editPart.mainFunc()"/>
     </actionlist>
 	<page tag="Iveco_Custom_Build" text="Iveco Custom Build">
         <group tag="OpenWizard_menu" text="">
