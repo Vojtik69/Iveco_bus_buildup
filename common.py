@@ -1,3 +1,5 @@
+import os
+
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -5,6 +7,7 @@ from hwx import gui as gui2
 import yaml
 import pandas as pd
 import inspect
+import os
 
 print("loading common.py")
 
@@ -21,8 +24,13 @@ def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
         allOfType = []
     for index, row in parts.iterrows():
         # print(index)
-        if index[0] == searchedType and not pd.isna(index[selectedSolver]):
-            allOfType.append(index[1])
+        if index[0] == searchedType:
+            if selectedSolver:
+                if not pd.isna(index[selectedSolver]):
+                    allOfType.append(index[1])
+            else:
+                allOfType.append(index[1])
+
     return sort_alphabetically(allOfType)
 
 
@@ -357,7 +365,7 @@ def extractAllTypes(hierarchy, onlyNames=False):
                 extract_names(group['groups'])
 
     extract_names(hierarchy['groups']['FT groups'])
-
+    print(names)
     return sort_alphabetically(names)
 
 

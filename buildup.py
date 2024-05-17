@@ -19,7 +19,6 @@ print("Initiating...")
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
 
-dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
 

@@ -3,11 +3,11 @@ from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
 import os
-import itertools
-from functools import partial
 import yaml
 import os.path
 import pandas as pd
+
+from common import checkNotEmpty
 
 print("Initiating...")
 
@@ -416,24 +416,6 @@ def AddPartGUI():
         widgetyAddPart['vyber_cesta_OptiStruct'].value = ""
         widgetyAddPart['vyber_cesta_Radioss'].value = ""
         widgetyAddPart['vyber_typ'].value = ""
-
-    def checkNotEmpty():
-        if widgetyAddPart['vyber_nazev'].value in najdi_vsechny_party():
-            gui2.tellUser("Name of new part is not unique")
-            return
-
-        if widgetyAddPart['vyber_cesta_OptiStruct'].value == "" and widgetyAddPart['vyber_cesta_Radioss'].value == "":
-            gui2.tellUser("Paths to files are both empty.")
-            return
-        else:
-            if widgetyAddPart['vyber_cesta_OptiStruct'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_OptiStruct'].value):
-                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
-                return
-            if widgetyAddPart['vyber_cesta_Radioss'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_Radioss'].value):
-                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
-                return
-
-        SetCompatibilityGUI(widgetyAddPart['vyber_typ'].value)
 
     close = gui.Button('Close', command=onCloseAddPartGUI)
     add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)

@@ -14,6 +14,8 @@ from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelBuildup, parts, hierarchyOfTypes, tclPath, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 
+from compatibility import SetCompatibilityGUI, showCompatibilityGUI
+
 print("Initiating AddPart...")
 
 widgetyAddPart = {}
@@ -25,12 +27,40 @@ dialogEditPart = gui.Dialog(caption="Edit Part")
 width = 200
 height = 200
 
+def checkNotEmpty(event, widgetyAddPart, parts):
+    if widgetyAddPart['vyber_nazev'].value in findAllParts(parts):
+        gui2.tellUser("Name of new part is not unique")
+        return
+
+    if not widgetyAddPart['vyber_nazev'].value:
+        gui2.tellUser("Name of new part is empty")
+        return
+
+    if widgetyAddPart['vyber_cesta_OptiStruct'].value == "" and widgetyAddPart['vyber_cesta_Radioss'].value == "":
+        gui2.tellUser("Paths to files are both empty.")
+        return
+    else:
+        if widgetyAddPart['vyber_cesta_OptiStruct'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_OptiStruct'].value):
+            gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
+            return
+        if widgetyAddPart['vyber_cesta_Radioss'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_Radioss'].value):
+            gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
+            return
+
+    showCompatibilityGUI(widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts)
+
 def AddPartGUI():
     global widgetyAddPart
     global dialogAddPart
+    global selectedSolver
 
     widgetyAddPart['label_typ'] = gui.Label(text="Type of new part:")
-    widgetyAddPart['vyber_typ'] = gui.ComboBoxEditor(extractAllTypes(hierarchyOfTypes, onlyNames=True), name="vyber_typ")
+    widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllTypes(hierarchyOfTypes, onlyNames=True), name="vyber_typ")
+    # Possible to replace ComboBox for SearchBar or something similar in future
+    # widgetyAddPart['vyber_typ_label'] = gui.Label(text="---")
+    # widgetyAddPart['vyber_typ'] = gui.SearchBar(name="vyber_typ", command=changeType)
+    # for type in extractAllTypes(hierarchyOfTypes, onlyNames=True):
+    #     widgetyAddPart['vyber_typ'].addItem(label=type, category="Materials")
 
     widgetyAddPart['label_cesta_OptiStruct'] = gui.Label(text="Path to OptiStruct:")
     widgetyAddPart['vyber_cesta_OptiStruct'] = gui.OpenFileEntry(placeholdertext="Path to OptiStruct")
@@ -46,7 +76,7 @@ def AddPartGUI():
     def onCloseAddPartGUI(event):
         global dialogAddPart
         dialogAddPart.Hide()
-        dialogAddPart = gui.Dialog(caption  = "Add Part")
+
 
     def onResetAddPartGUI(event):
         widgetyAddPart['vyber_nazev'].value = ""
@@ -54,26 +84,9 @@ def AddPartGUI():
         widgetyAddPart['vyber_cesta_Radioss'].value = ""
         widgetyAddPart['vyber_typ'].value = ""
 
-    def checkNotEmpty():
-        if widgetyAddPart['vyber_nazev'].value in findAllParts(parts):
-            gui2.tellUser("Name of new part is not unique")
-            return
-
-        if widgetyAddPart['vyber_cesta_OptiStruct'].value == "" and widgetyAddPart['vyber_cesta_Radioss'].value == "":
-            gui2.tellUser("Paths to files are both empty.")
-            return
-        else:
-            if widgetyAddPart['vyber_cesta_OptiStruct'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_OptiStruct'].value):
-                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
-                return
-            if widgetyAddPart['vyber_cesta_Radioss'].value != "" and not os.path.isfile(widgetyAddPart['vyber_cesta_Radioss'].value):
-                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
-                return
-
-        # SetCompatibilityGUI(widgetyAddPart['vyber_typ'].value)
 
     close = gui.Button('Close', command=onCloseAddPartGUI)
-    add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)
+    add   = gui.Button('Set compatibility >>>', command=lambda event: checkNotEmpty(event, widgetyAddPart, parts))
     reset = gui.Button('Reset', command=onResetAddPartGUI)
 
     upperFrame = gui.HFrame(
