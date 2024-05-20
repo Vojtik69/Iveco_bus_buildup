@@ -1,7 +1,7 @@
-proc import_data {file_path} {
+proc import_data {file_path part_name} {
 set filename [file tail $file_path]
-*createinclude 0 $filename $file_path 0
-*attributeupdatestring cards 1 5015 20 1 0 $filename
+*createinclude 0 $part_name $file_path 0
+*attributeupdatestring cards 1 5015 20 1 0 $part_name
 *createstringarray 23 "RadiossBlock " "Radioss2023 " "~D01_OPTION 1 " "ASSIGNPROP_BYHMCOMMENTS " \
   "CREATE_PART_HIERARCHY" "IMPORT_MATERIAL_METADATA" "~FE_READ_OPTIMIZATION_FILE 0 " \
   "READ_INITIAL_SHELL_Data " "READ_INITIAL_BRICK_Data " "SingleCollector " \
@@ -28,6 +28,12 @@ proc realize_connectors {} {
 *CE_Realize 1
 *clearmark connectors 1
 }
+
+#=======list all include ===========
+#hm_getincludes -byshortname
+
+#=========delete includes ==========
+#*removeincludes include_ids={2} remove_contents=1
 
 #====import include =====
 #*start_batch_import 2

@@ -9,19 +9,37 @@ import pandas as pd
 import inspect
 import os
 import re
+import traceback
 
 print("loading common.py")
+
+def print_caller_info():
+    stack_trace = traceback.extract_stack()
+    caller_name = stack_trace[-3].name
+    caller_file = os.path.basename(stack_trace[-3].filename)
+    caller_line = stack_trace[-3].lineno
+    print(f"SortAlphabetically byla volána funkcí {caller_name} ze souboru: {caller_file}, na řádku: {caller_line}")
 
 def alphanum_key(s):
     # Rozdělí řetězec na části, kde čísla jsou konvertována na int a zbytek zůstává jako string
     return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
 
 def sortAlphabetically(items):
-    if hasattr(items, '__iter__') and not isinstance(items, str):
+    print_caller_info()
+    new_items = items
+    if hasattr(new_items, '__iter__') and not isinstance(new_items, str):
         # Použije přirozené řazení s použitím alphanum_key jako klíčové funkce
-        return sorted(items, key=alphanum_key)
+        print(f"list pred: {new_items}")
+        if '---' in new_items:
+            new_items.remove('---')
+            print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            return ['---'] + sorted(new_items, key=alphanum_key)
+        else:
+            print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            return sorted(new_items, key=alphanum_key)
+
     else:
-        return items
+        return new_items
 
 def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
     allOfType = ["---"]
@@ -178,6 +196,7 @@ def findPathToIncludeFile(partDb, selectedSolver, name):
 
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
+    print_caller_info()
     compatibles = [] if removeEmpty else ["---"]
     superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
@@ -203,7 +222,7 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
                     break
         if compatible:
             compatibles.append(part)
-    print(f"compatibles: {sortAlphabetically(compatibles)}")
+    # print(f"compatibles: {sortAlphabetically(compatibles)}")
     return sortAlphabetically(compatibles)
 
 

@@ -107,7 +107,7 @@ def modelBuildupGui():
                         path = findPathToIncludeFile(parts, selectedSolver, selectedItem)
                         print(f"path: {path}")
                         if os.path.exists(path):
-                            hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                            hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedItem}"')
                         else:
                             print(f"Include file {path} does not exist. Skipping this include.")
                     else:
@@ -121,7 +121,7 @@ def modelBuildupGui():
                     path = findPathToIncludeFile(parts, selectedSolver, selectedValue)
                     print(f"path: {path}")
                     if os.path.exists(path):
-                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}"')
+                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedValue}"')
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
                 else:
