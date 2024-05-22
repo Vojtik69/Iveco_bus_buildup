@@ -45,7 +45,7 @@ def checkNotEmpty(event, widgetyAddPart, parts):
             gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
             return
 
-    showCompatibilityGUI(widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts)
+    showCompatibilityGUI("add", widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts)
 
 def AddPartGUI():
     global widgetyAddPart

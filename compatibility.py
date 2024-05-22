@@ -9,14 +9,15 @@ from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
+from pprint import pprint
 
-from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility
+from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility, setCompatibility, csvPath, restoreHeaderInCSV
 
 print("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
-def SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
+def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
     global dialogSetCompatibility
     boxesParents = []
     boxesSubordinants = []
@@ -59,6 +60,65 @@ def SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
         sortFilterModel = gui.TableSortFilterModel(model)
         table.model = sortFilterModel
         return table
+
+    def editCompatibilityInDB(event, parts):
+        def goThruTable(table, parts):
+            print(f"celldata: {table.model.model.root.celldata}")
+            # print(table.model.model.root.getData())
+            print(f"len(celldata): {len(table.model.model.root.celldata)}")
+            for row in table.model.model.root.celldata:
+                print(f"row: {row}")
+                print(f"len(row): {len(row)}")
+                if len(row) > 0:
+                    compatibilityWith = row[0].get('value', None)
+                    newValue = row[1].get('value', None)
+                    print(f"compatibilityWith: {compatibilityWith}-{newValue}")
+                    parts = setCompatibility(parts, partName, compatibilityWith, newValue)
+            return parts
+
+        for ft, table in tableOfSpecTypes.items():
+            parts = goThruTable(table, parts)
+
+        for ft, table in tableOfParents.items():
+            parts = goThruTable(table, parts)
+
+        for ft, table in tableOfSubordinants.items():
+            parts = goThruTable(table, parts)
+
+        print(parts)
+        parts.to_csv(csvPath)
+        restoreHeaderInCSV(csvPath)
+
+    def addPartToDB(event, parts):
+        def goThruTable(table, parts):
+            print(f"celldata: {table.model.model.root.celldata}")
+            # print(table.model.model.root.getData())
+            print(f"len(celldata): {len(table.model.model.root.celldata)}")
+            for row in table.model.model.root.celldata:
+                print(f"row: {row}")
+                print(f"len(row): {len(row)}")
+                if len(row) > 0:
+                    compatibilityWith = row[0].get('value', None)
+                    newValue = row[1].get('value', None)
+                    print(f"compatibilityWith: {compatibilityWith}-{newValue}")
+                    parts = setCompatibility(parts, partName, compatibilityWith, newValue)
+            return parts
+
+        for ft, table in tableOfSpecTypes.items():
+            parts = goThruTable(table, parts)
+
+        for ft, table in tableOfParents.items():
+            parts = goThruTable(table, parts)
+
+        for ft, table in tableOfSubordinants.items():
+            parts = goThruTable(table, parts)
+
+        print(parts)
+        parts.to_csv(csvPath)
+        restoreHeaderInCSV(csvPath)
+
+
+
 
     for specType in boxesVehicleSpec:
         labelObject = gui.Label(text=f'{specType}')
@@ -109,7 +169,10 @@ def SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
     global compatibilityGuiFrame
 
     cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
-    confirm = gui.Button('Confirm')
+    if whatToDo == "edit":
+        confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts))
+    elif whatToDo == "add":
+        confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts))
 
     sepVertical = gui.Separator(orientation='vertical', spacing='20')
     sepHorizontal = gui.Separator(orientation='horizontal', spacing='3')
@@ -123,7 +186,7 @@ def SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
     dialogSetCompatibility.setButtonVisibile('cancel', False)
     dialogSetCompatibility.show(width=900, height=500)
 
-def showCompatibilityGUI(typ, hierarchyOfTypes, parts, partName=None):
+def showCompatibilityGUI(whatToDo, typ, hierarchyOfTypes, parts, partName=None):
     global dialogSetCompatibility
     dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
-    SetCompatibilityGUI(typ, hierarchyOfTypes, parts, partName)
+    SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName)

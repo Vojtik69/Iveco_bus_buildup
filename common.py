@@ -6,6 +6,7 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 import yaml
 import pandas as pd
+import csv
 import inspect
 import os
 import re
@@ -428,9 +429,45 @@ def findCompatibility(df, name2ndColumn, name3rdRow):
     # print(value)
     return value
 
+def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
+    print(f"parts: {name2ndColumn} - {name3rdRow}, value: {newValue}")
+    try:
+        print(parts.loc[(slice(None), name2ndColumn), (slice(None), slice(None), name3rdRow)])
+        parts.loc[(slice(None), name2ndColumn), (slice(None), slice(None), name3rdRow)] = newValue
+    except KeyError:
+        print(f"Not found")
+    return parts
 
-parts = pd.read_csv('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv', index_col=[0, 1, 2, 3],
-                    header=[0, 1, 2], skipinitialspace=True)
+# Definice funkce pro konverzi na int nebo str
+def covertToIntOrStr(x):
+    if x.isdigit():
+        print(f"{x} is digit")
+        try:
+            return int(x)
+        except ValueError:
+            return str(x)
+    print(f"{x} NOT digit")
+    return str(x)
+
+def restoreHeaderInCSV(csvFile):
+    # Open the CSV file in read mode
+    with open(csvFile, 'r', newline='') as file:
+        reader = csv.reader(file)
+        lines = list(reader)
+
+    # Modify the values in the first four cells of the third line
+    if len(lines) >= 3:  # Check if the file has at least 3 lines
+        lines[2][:4] = ["type","name","optistruct","radioss"]
+
+    # Write the modified lines back to the CSV file
+    with open(csvFile, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(lines)
+
+csvPath = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
+
+parts = pd.read_csv(csvPath, index_col=[0, 1, 2, 3],
+                    header=[0, 1, 2], skipinitialspace=True, converters={i: covertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
 parts.columns.names = [None] * len(parts.columns.names)
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:

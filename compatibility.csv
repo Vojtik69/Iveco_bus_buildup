@@ -1,6 +1,6 @@
--,-,-,-,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,ft,ft,ft,ft,ft,ft,ft,ft,ft,ft,ft
--,-,-,-,Vehicle Type,Vehicle Type,Vehicle Type,Vehicle Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Length,Length,Length,Length,FT 1 Lorem ipsum,FT 1 Lorem ipsum,FT 1 Lorem ipsum,FT 2,FT 2,FT 4,FT 4,FT 4,FT 5,Chassis Others,Chassis Others
-type,name,optistruct,radioss,Low Floor,Low Entry,Low Decker,High Decker,Diesel,Diesel MH,CNG,CNG MH,ZEV,H2,10 m,12 m,13 m,18 m,var_D_10,var_D_12,var_35,FT2_var3,FT2_var1,FT4_var1,FT4_var1,FT_4_var1,FT5_var1,Other1,Other2
+,,,,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,vehicle_spec,ft,ft,ft,ft,ft,ft,ft,ft,ft,ft,ft
+,,,,Vehicle Type,Vehicle Type,Vehicle Type,Vehicle Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Power Unit Type,Length,Length,Length,Length,FT 1 Lorem ipsum,FT 1 Lorem ipsum,FT 1 Lorem ipsum,FT 2,FT 2,FT 4,FT 4,FT 4,FT 5,Chassis Others,Chassis Others
+type,name,optistruct,radioss,Low Floor,Low Entry,Low Decker,High Decker,Diesel,Diesel MH,CNG,CNG MH,ZEV,H2,10 m,12 m,13 m,18 m,var_D_10,var_D_12,var_35,FT2_var3,FT2_var1,FT4_var1,FT4_var2,FT_4_var1,FT5_var1,Other1,Other2
 FT 1 Lorem ipsum,var_D_10,C:/var_D_10_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\03_connector_test\Uzel\includes_with_connectors_v1\Side_wall.inc,1,1,1,1,1,1,,,,,1,,,,,,,,,,,,,,
 FT 1 Lorem ipsum,var_D_12,C:/var_D_12_os.inc,C:/var_D_12_radioss.inc,1,1,1,1,1,1,,,,,1,1,,,,,,,,,,,,,
 FT 1 Lorem ipsum,var_35,C:/var_35_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\01_data\02_reduced_BIW_model\first_includes\Rear.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
@@ -10,5 +10,5 @@ FT 4,FT4_var1,C:/FT4_var1_os.inc,N:\01_DATA\01_PROJECTS\103_Iveco_Model_Buildup\
 FT 4,FT4_var2,C:/FT4_var1_os.inc,C:/FT4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 FT 4,FT_4_var1,C:/FT_4_var1_os.inc,C:/FT_4_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
 FT 5,FT5_var1,,C:/FT5_var1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,,
-Chassis Others,Other1,C:/Other1_os.inc,C:/Other1_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,
+Chassis Others,Other1,C:\Users\Vojtech Rulc\Desktop\test.yaml,C:\Users\Vojtech Rulc\Desktop\test.yaml,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,,,,,,
 Chassis Others,Other2,C:/Other2_os.inc,C:/Other2_radioss.inc,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,,,,,,,,,,

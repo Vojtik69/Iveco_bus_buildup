@@ -93,7 +93,7 @@ def EditPartGUI():
                 gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
                 return
 
-        showCompatibilityGUI(widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, widgetyEditPart['vyber_nazev_original'].value)
+        showCompatibilityGUI("edit",widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, widgetyEditPart['vyber_nazev_original'].value)
 
 
 
