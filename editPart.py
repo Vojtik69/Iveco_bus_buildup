@@ -5,6 +5,7 @@ currentDir = os.path.dirname(os.path.realpath(__file__))
 print(f"dirname: {currentDir}")
 # Přidání této cesty do sys.path
 sys.path.append(currentDir)
+import pandas as pd
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -93,9 +94,15 @@ def EditPartGUI():
                 gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
                 return
 
-        showCompatibilityGUI("edit",widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, widgetyEditPart['vyber_nazev_original'].value)
+        partInfo = {"partType": widgetyEditPart['vyber_typ_new'].value,
+                    "partName": widgetyEditPart['vyber_nazev_new'].value,
+                    "optistruct": widgetyEditPart['vyber_cesta_new_OptiStruct'].value or "",
+                    "radioss" : widgetyEditPart['vyber_cesta_new_Radioss'].value or "",
+                    }
+        showCompatibilityGUI(dialogEditPart, widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, partInfo)
+        dialogEditPart.hide()
 
-
+    # TODO: při editování hledat kompatibilitu podle starého názvu a nového typu
 
     close = gui.Button('Close', command=onCloseEditPartGUI)
     add   = gui.Button('Set compatibility >>>', command=checkNotEmpty)

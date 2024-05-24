@@ -10,6 +10,7 @@ from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
 from pprint import pprint
+import pandas as pd
 
 from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility, setCompatibility, csvPath, restoreHeaderInCSV
 
@@ -17,7 +18,7 @@ print("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
-def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
+def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
     boxesParents = []
     boxesSubordinants = []
@@ -28,12 +29,15 @@ def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
     tableOfSubordinants = {}
     tableOfSpecTypes = {}
 
+    print(parts)
+
     def onCancelCompatibilityGUI():
         dialogSetCompatibility.Hide()
         global tableOfParents
         global tableOfSubordinants
         tableOfParents = {}
         tableOfSubordinants = {}
+        initiator.show()
 
     boxesVehicleSpec = getVehicleSpecTypes(hierarchyOfTypes)
     boxesParents = findSuperordinantFts(hierarchyOfTypes, typ, [])
@@ -44,8 +48,8 @@ def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
         row = 0
         partList = getValuesForVehicleSpec(parts, type, removeEmpty=True) if spec else findAllOfType(parts,None, type, removeEmpty=True)
         for part in partList:
-            if partName:
-                compatibilityValue = findCompatibility(parts, partName, part)
+            if partInfo.get("partName", None):
+                compatibilityValue = findCompatibility(parts, partInfo["partName"], part)
             else:
                 compatibilityValue = '1'
 
@@ -61,64 +65,66 @@ def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
         table.model = sortFilterModel
         return table
 
-    def editCompatibilityInDB(event, parts):
-        def goThruTable(table, parts):
-            print(f"celldata: {table.model.model.root.celldata}")
-            # print(table.model.model.root.getData())
-            print(f"len(celldata): {len(table.model.model.root.celldata)}")
-            for row in table.model.model.root.celldata:
-                print(f"row: {row}")
-                print(f"len(row): {len(row)}")
-                if len(row) > 0:
-                    compatibilityWith = row[0].get('value', None)
-                    newValue = row[1].get('value', None)
-                    print(f"compatibilityWith: {compatibilityWith}-{newValue}")
-                    parts = setCompatibility(parts, partName, compatibilityWith, newValue)
-            return parts
+    def goThruTable(table, parts, partName):
+        print(f"celldata: {table.model.model.root.celldata}")
+        # print(table.model.model.root.getData())
+        print(f"len(celldata): {len(table.model.model.root.celldata)}")
+        for row in table.model.model.root.celldata:
+            print(f"row: {row}")
+            print(f"len(row): {len(row)}")
+            if len(row) > 0:
+                compatibilityWith = row[0].get('value', None)
+                newValue = row[1].get('value', None)
+                print(f"compatibilityWith: {compatibilityWith}-{newValue}")
+                parts = setCompatibility(parts, partName, compatibilityWith, newValue)
+        return parts
 
+    def forAllTables(parts, partName):
         for ft, table in tableOfSpecTypes.items():
-            parts = goThruTable(table, parts)
+            parts = goThruTable(table, parts, partName)
 
         for ft, table in tableOfParents.items():
-            parts = goThruTable(table, parts)
+            parts = goThruTable(table, parts, partName)
 
         for ft, table in tableOfSubordinants.items():
-            parts = goThruTable(table, parts)
+            parts = goThruTable(table, parts, partName)
+
+        return parts
+
+    def editCompatibilityInDB(event, parts, partInfo):
+
+        parts = forAllTables(parts, partInfo.get("partName",""))
 
         print(parts)
-        parts.to_csv(csvPath)
+        parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         restoreHeaderInCSV(csvPath)
 
-    def addPartToDB(event, parts):
-        def goThruTable(table, parts):
-            print(f"celldata: {table.model.model.root.celldata}")
-            # print(table.model.model.root.getData())
-            print(f"len(celldata): {len(table.model.model.root.celldata)}")
-            for row in table.model.model.root.celldata:
-                print(f"row: {row}")
-                print(f"len(row): {len(row)}")
-                if len(row) > 0:
-                    compatibilityWith = row[0].get('value', None)
-                    newValue = row[1].get('value', None)
-                    print(f"compatibilityWith: {compatibilityWith}-{newValue}")
-                    parts = setCompatibility(parts, partName, compatibilityWith, newValue)
-            return parts
+    def addPartToDB(event, parts, partInfo):
+        print(f"parts in addPartToDB:{parts}")
+        print(f"partInfo.values(): {partInfo.values()}")
+        new_row_df = pd.DataFrame(pd.NA, index=[tuple(partInfo.values())], columns=parts.columns)
+        print(f"new_row_df: {new_row_df}")
+        parts = pd.concat([parts, new_row_df], axis=0)
+        print(f"1:{parts}")
+        parts = forAllTables(parts, partInfo.get("partName",""))
+        print(f"2:{parts}")
+        last_row = parts.iloc[-1]
+        last_index = parts.index[-1]
 
-        for ft, table in tableOfSpecTypes.items():
-            parts = goThruTable(table, parts)
+        ft_columns = [col for col in parts.columns if col[0] == 'ft']
+        last_row_ft = last_row[ft_columns]
 
-        for ft, table in tableOfParents.items():
-            parts = goThruTable(table, parts)
+        new_column_name = ("ft", last_index[0], last_index[1])
 
-        for ft, table in tableOfSubordinants.items():
-            parts = goThruTable(table, parts)
-
+        # Přidání nového sloupce s daty z posledního řádku
+        parts[new_column_name] = pd.NA
+        print(f"3:{parts}")
+        parts.iloc[:-1, parts.columns.get_loc(new_column_name)] = last_row_ft.values
+        print(f"4:{parts}")
         print(parts)
-        parts.to_csv(csvPath)
+        # TODO: Změnit cestu
+        parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         restoreHeaderInCSV(csvPath)
-
-
-
 
     for specType in boxesVehicleSpec:
         labelObject = gui.Label(text=f'{specType}')
@@ -169,16 +175,30 @@ def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
     global compatibilityGuiFrame
 
     cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
-    if whatToDo == "edit":
+
+
+    print(f"initiator: {initiator.caption}")
+
+    if initiator.caption == "Edit Part":
         confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts))
-    elif whatToDo == "add":
-        confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts))
+    elif initiator.caption == "Add Part":
+        confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts, partInfo))
 
     sepVertical = gui.Separator(orientation='vertical', spacing='20')
-    sepHorizontal = gui.Separator(orientation='horizontal', spacing='3')
+    sepHorizontal1 = gui.Separator(orientation='horizontal', spacing='2')
+    sepHorizontal2 = gui.Separator(orientation='horizontal', spacing='3')
 
-    upperFrame = gui.HFrame(parentsFrame, sepVertical, subordinatesFrame)
-    compatibilityGuiFrame = gui.VFrame(VehicleSpecFrame, sepHorizontal, upperFrame, (800, confirm, cancel))
+    print(partInfo)
+
+    label_partName = gui.Label(text=f"{partInfo.get('partName', '---')} -", font={'bold': True})
+    label_partType = gui.Label(text=partInfo.get("partType", "---"), font={'bold': True})
+    label_os =       gui.Label(text=f"|  {os.path.basename(partInfo.get('optistruct') or '---')}")
+    label_radioss =  gui.Label(text=f"|  {os.path.basename(partInfo.get('radioss') or '---')}")
+
+    labelFrame = gui.HFrame(label_partName, label_partType, label_os, label_radioss, "<->")
+
+    parentsAndSubordinatesFrame = gui.HFrame(parentsFrame, sepVertical, subordinatesFrame)
+    compatibilityGuiFrame = gui.VFrame(labelFrame, sepHorizontal1, VehicleSpecFrame, sepHorizontal2, parentsAndSubordinatesFrame, (800, confirm, cancel))
 
     dialogSetCompatibility.recess().add(compatibilityGuiFrame)
 
@@ -186,7 +206,7 @@ def SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName=None):
     dialogSetCompatibility.setButtonVisibile('cancel', False)
     dialogSetCompatibility.show(width=900, height=500)
 
-def showCompatibilityGUI(whatToDo, typ, hierarchyOfTypes, parts, partName=None):
+def showCompatibilityGUI(initiator, typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
     dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
-    SetCompatibilityGUI(whatToDo,typ, hierarchyOfTypes, parts, partName)
+    SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo)

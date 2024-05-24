@@ -9,6 +9,7 @@ from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
+import pandas as pd
 
 from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelBuildup, parts, hierarchyOfTypes, tclPath, \
@@ -26,6 +27,7 @@ width = 200
 height = 200
 
 def checkNotEmpty(event, widgetyAddPart, parts):
+
     if widgetyAddPart['vyber_nazev'].value in findAllParts(parts):
         gui2.tellUser("Name of new part is not unique")
         return
@@ -45,7 +47,14 @@ def checkNotEmpty(event, widgetyAddPart, parts):
             gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
             return
 
-    showCompatibilityGUI("add", widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts)
+    partInfo = {"partType": widgetyAddPart['vyber_typ'].value,
+                "partName": widgetyAddPart['vyber_nazev'].value,
+                "optistruct": widgetyAddPart['vyber_cesta_OptiStruct'].value or "",
+                "radioss" : widgetyAddPart['vyber_cesta_Radioss'].value or ""
+                }
+
+    showCompatibilityGUI(dialogAddPart, widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts, partInfo)
+    dialogAddPart.hide()
 
 def AddPartGUI():
     global widgetyAddPart

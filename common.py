@@ -417,22 +417,26 @@ def findCompatibility(df, name2ndColumn, name3rdRow):
 
     # Vyhledání hodnoty z daného sloupce třetího řádku (součást víceúrovňového záhlaví)
     try:
-        value = row.xs(name3rdRow, level=2, axis=1).iloc[0,0]
-        if pd.isna(value):
-            value = 0  # Nahrazení NaN hodnotou 0
+        print(f"row.xs(name3rdRow, level=2, axis=1):  {row.xs(name3rdRow, level=2, axis=1)}")
+        if not row.xs(name3rdRow, level=2, axis=1).empty:
+            value = row.xs(name3rdRow, level=2, axis=1).iloc[0,0]
+            if pd.isna(value):
+                value = 0  # Nahrazení NaN hodnotou 0
+        else:
+            value = 0
     except KeyError:
         value = 0  # Pokud neexistuje daný sloupec, vrátí None
     try:
         value = int(value)
     except:
         print(f"not possible to make it integer: {value}")
-    # print(value)
+    print(f"returning value: {value}")
     return value
 
 def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
     print(f"parts: {name2ndColumn} - {name3rdRow}, value: {newValue}")
     try:
-        print(parts.loc[(slice(None), name2ndColumn), (slice(None), slice(None), name3rdRow)])
+        print(parts)
         parts.loc[(slice(None), name2ndColumn), (slice(None), slice(None), name3rdRow)] = newValue
     except KeyError:
         print(f"Not found")
