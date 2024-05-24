@@ -20,6 +20,7 @@ dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
 def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
+    global compatibilityGuiFrame
     boxesParents = []
     boxesSubordinants = []
     boxesVehicleSpec = []
@@ -49,7 +50,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         partList = getValuesForVehicleSpec(parts, type, removeEmpty=True) if spec else findAllOfType(parts,None, type, removeEmpty=True)
         for part in partList:
             if partInfo.get("partName", None):
-                compatibilityValue = findCompatibility(parts, partInfo["partName"], part)
+                compatibilityValue = findCompatibility(parts, partInfo.get("oldName",partInfo["partName"]), part)
             else:
                 compatibilityValue = '1'
 
@@ -66,12 +67,12 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         return table
 
     def goThruTable(table, parts, partName):
-        print(f"celldata: {table.model.model.root.celldata}")
+        # print(f"celldata: {table.model.model.root.celldata}")
         # print(table.model.model.root.getData())
-        print(f"len(celldata): {len(table.model.model.root.celldata)}")
+        # print(f"len(celldata): {len(table.model.model.root.celldata)}")
         for row in table.model.model.root.celldata:
-            print(f"row: {row}")
-            print(f"len(row): {len(row)}")
+            # print(f"row: {row}")
+            # print(f"len(row): {len(row)}")
             if len(row) > 0:
                 compatibilityWith = row[0].get('value', None)
                 newValue = row[1].get('value', None)
@@ -93,11 +94,46 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
     def editCompatibilityInDB(event, parts, partInfo):
 
-        parts = forAllTables(parts, partInfo.get("partName",""))
+        # Edit index
+        positionIndex = next((i for i, tup in enumerate(parts.index) if tup[1] == partInfo["oldName"]), None)
+        new_index = (partInfo["partType"], partInfo["partName"], partInfo["optistruct"], partInfo["radioss"])
+        index_tuples = parts.index.tolist()
+        index_tuples[positionIndex] = new_index
+        parts.index = pd.MultiIndex.from_tuples(index_tuples, names=parts.index.names)
 
+        # Edit header
+        positionHeader = next((i for i, col in enumerate(parts.columns) if col[2] == partInfo["oldName"]), None)
+        new_header =("ft", partInfo["partType"], partInfo["partName"])
+        columns_tuples = parts.columns.tolist()
+        columns_tuples[positionHeader] = new_header
+        print(f"columns_tuples: {columns_tuples}")
+        print(f"parts.columns.names: {parts.columns.names}")
+        parts.columns = pd.MultiIndex.from_tuples(columns_tuples, names=parts.columns.names)
+
+        # Edit values
+        parts = forAllTables(parts, partInfo["partName"])
+
+        # Move row values to column
+        print(f"positionIndex: {positionIndex}")
+        print(f"positionHeader: {positionHeader}")
+        row = parts.iloc[positionIndex]
+        print(f"row.values: {row.values}")
+        ft_columns = [col for col in parts.columns if col[0] == 'ft']
+        print(f"ft_columns: {ft_columns}")
+        row_ft = row[ft_columns]
+        print(row_ft.values)
+        print(parts.iloc[:, positionHeader].values)
+        parts.iloc[:, positionHeader] = row_ft.values
+
+        # Write down
         print(parts)
+        # TODO: Změnit cestu
         parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         restoreHeaderInCSV(csvPath)
+
+        dialogSetCompatibility.hide()
+        gui2.tellUser("Successfully edited")
+
 
     def addPartToDB(event, parts, partInfo):
         print(f"parts in addPartToDB:{parts}")
@@ -125,6 +161,9 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         # TODO: Změnit cestu
         parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         restoreHeaderInCSV(csvPath)
+
+        dialogSetCompatibility.hide()
+        gui2.tellUser("Successfully added")
 
     for specType in boxesVehicleSpec:
         labelObject = gui.Label(text=f'{specType}')
@@ -172,15 +211,13 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     rada1 = ()
     rada2 = ()
 
-    global compatibilityGuiFrame
-
     cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
 
 
     print(f"initiator: {initiator.caption}")
 
     if initiator.caption == "Edit Part":
-        confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts))
+        confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts, partInfo))
     elif initiator.caption == "Add Part":
         confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts, partInfo))
 

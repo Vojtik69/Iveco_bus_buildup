@@ -26,7 +26,7 @@ dialogEditPart = gui.Dialog(caption="Edit Part")
 width = 200
 height = 200
 
-
+# TODO resetovat při otevření
 def EditPartGUI():
     global widgetyEditPart
 
@@ -42,6 +42,51 @@ def EditPartGUI():
         widgetyEditPart['vyber_cesta_new_OptiStruct'].set(findPathToIncludeFile(parts, 2, widgetyEditPart['vyber_nazev_original'].get()))
         widgetyEditPart['vyber_cesta_new_Radioss'].set(findPathToIncludeFile(parts, 3, widgetyEditPart['vyber_nazev_original'].get()))
 
+    # Method called on clicking 'Close'.
+    def onCloseEditPartGUI(event):
+        global dialogEditPart
+        dialogEditPart.Hide()
+
+    def onResetEditPartGUI(event):
+        widgetyEditPart['vyber_typ_original'].value = ""
+        widgetyEditPart['vyber_nazev_original'].setValues(
+            findAllOfType(parts, None, widgetyEditPart['vyber_typ_original'].get(), removeEmpty=True))
+        widgetyEditPart['vyber_typ_new'].value = widgetyEditPart['vyber_typ_original'].value
+        widgetyEditPart['vyber_nazev_new'].value = widgetyEditPart['vyber_nazev_original'].value
+        widgetyEditPart['vyber_cesta_new_OptiStruct'].value = findPathToIncludeFile(parts, 2, widgetyEditPart[
+            'vyber_nazev_original'].get())
+        widgetyEditPart['vyber_cesta_new_Radioss'].value = findPathToIncludeFile(parts, 3, widgetyEditPart[
+            'vyber_nazev_original'].get())
+
+    def checkNotEmpty():
+        if widgetyEditPart['vyber_nazev_new'].value in findAllParts(parts):
+            if widgetyEditPart['vyber_nazev_original'].value != widgetyEditPart['vyber_nazev_new'].value:
+                gui2.tellUser("New name of part is not unique")
+                return
+
+        if widgetyEditPart['vyber_cesta_new_OptiStruct'].value == "" and widgetyEditPart[
+            'vyber_cesta_new_Radioss'].value == "":
+            gui2.tellUser("Paths to files are both empty.")
+            return
+        else:
+            if widgetyEditPart['vyber_cesta_new_OptiStruct'].value != "" and not os.path.isfile(
+                    widgetyEditPart['vyber_cesta_new_OptiStruct'].value):
+                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
+                return
+            if widgetyEditPart['vyber_cesta_new_Radioss'].value != "" and not os.path.isfile(
+                    widgetyEditPart['vyber_cesta_new_Radioss'].value):
+                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
+                return
+
+        partInfo = {"partType": widgetyEditPart['vyber_typ_new'].value,
+                    "partName": widgetyEditPart['vyber_nazev_new'].value,
+                    "optistruct": widgetyEditPart['vyber_cesta_new_OptiStruct'].value or "",
+                    "radioss": widgetyEditPart['vyber_cesta_new_Radioss'].value or "",
+                    "oldName": widgetyEditPart['vyber_nazev_original'].value
+                    }
+        showCompatibilityGUI(dialogEditPart, widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts,
+                             partInfo)
+        dialogEditPart.hide()
 
     widgetyEditPart['label_typ_original'] = gui.Label(text="Original type of part:")
     widgetyEditPart['vyber_typ_original'] = gui2.ComboBox(extractAllTypes(hierarchyOfTypes, onlyNames=True), name="vyber_typ_original", command=onSelectedTypeOriginal)
@@ -60,47 +105,6 @@ def EditPartGUI():
 
     widgetyEditPart['label_cesta_new_Radioss'] = gui.Label(text="New path to Radioss:")
     widgetyEditPart['vyber_cesta_new_Radioss'] = gui.OpenFileEntry(findPathToIncludeFile(parts, 3, widgetyEditPart['vyber_nazev_original'].get()), placeholdertext="Path to Radioss")
-
-
-    # Method called on clicking 'Close'.
-    def onCloseEditPartGUI(event):
-        global dialogEditPart
-        dialogEditPart.Hide()
-
-    def onResetEditPartGUI(event):
-        widgetyEditPart['vyber_typ_original'].value = ""
-        widgetyEditPart['vyber_nazev_original'].setValues(findAllOfType(parts, None, widgetyEditPart['vyber_typ_original'].get(), removeEmpty=True))
-        widgetyEditPart['vyber_typ_new'].value = widgetyEditPart['vyber_typ_original'].value
-        widgetyEditPart['vyber_nazev_new'].value = widgetyEditPart['vyber_nazev_original'].value
-        widgetyEditPart['vyber_cesta_new_OptiStruct'].value = findPathToIncludeFile(parts, 2, widgetyEditPart['vyber_nazev_original'].get())
-        widgetyEditPart['vyber_cesta_new_Radioss'].value = findPathToIncludeFile(parts, 3, widgetyEditPart['vyber_nazev_original'].get())
-
-    def checkNotEmpty():
-        if widgetyEditPart['vyber_nazev_new'].value in findAllParts(parts):
-            if widgetyEditPart['vyber_nazev_original'].value != widgetyEditPart['vyber_nazev_new'].value:
-                gui2.tellUser("New name of part is not unique")
-                return
-
-        if widgetyEditPart['vyber_cesta_new_OptiStruct'].value == "" and widgetyEditPart['vyber_cesta_new_Radioss'].value == "":
-            gui2.tellUser("Paths to files are both empty.")
-            return
-        else:
-            if widgetyEditPart['vyber_cesta_new_OptiStruct'].value != "" and not os.path.isfile(
-                    widgetyEditPart['vyber_cesta_new_OptiStruct'].value):
-                gui2.tellUser("Path for OptiStruct is not valid. The file does not exist.")
-                return
-            if widgetyEditPart['vyber_cesta_new_Radioss'].value != "" and not os.path.isfile(
-                    widgetyEditPart['vyber_cesta_new_Radioss'].value):
-                gui2.tellUser("Path for Radioss is not valid. The file does not exist.")
-                return
-
-        partInfo = {"partType": widgetyEditPart['vyber_typ_new'].value,
-                    "partName": widgetyEditPart['vyber_nazev_new'].value,
-                    "optistruct": widgetyEditPart['vyber_cesta_new_OptiStruct'].value or "",
-                    "radioss" : widgetyEditPart['vyber_cesta_new_Radioss'].value or "",
-                    }
-        showCompatibilityGUI(dialogEditPart, widgetyEditPart['vyber_typ_new'].value, hierarchyOfTypes, parts, partInfo)
-        dialogEditPart.hide()
 
     # TODO: při editování hledat kompatibilitu podle starého názvu a nového typu
 

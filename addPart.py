@@ -26,6 +26,7 @@ dialogAddPart = gui.Dialog(caption="Add Part")
 width = 200
 height = 200
 
+# TODO resetovat při otevření
 def checkNotEmpty(event, widgetyAddPart, parts):
 
     if widgetyAddPart['vyber_nazev'].value in findAllParts(parts):
@@ -61,6 +62,17 @@ def AddPartGUI():
     global dialogAddPart
     global selectedSolver
 
+    # Method called on clicking 'Close'.
+    def onCloseAddPartGUI(event):
+        global dialogAddPart
+        dialogAddPart.Hide()
+
+    def onResetAddPartGUI(event):
+        widgetyAddPart['vyber_nazev'].value = ""
+        widgetyAddPart['vyber_cesta_OptiStruct'].value = ""
+        widgetyAddPart['vyber_cesta_Radioss'].value = ""
+        widgetyAddPart['vyber_typ'].value = ""
+
     widgetyAddPart['label_typ'] = gui.Label(text="Type of new part:")
     widgetyAddPart['vyber_typ'] = gui2.ComboBox(extractAllTypes(hierarchyOfTypes, onlyNames=True), name="vyber_typ")
     # Possible to replace ComboBox for SearchBar or something similar in future
@@ -77,20 +89,6 @@ def AddPartGUI():
 
     widgetyAddPart['label_nazev'] = gui.Label(text="Name of new part:")
     widgetyAddPart['vyber_nazev'] = gui.LineEdit()
-
-
-    # Method called on clicking 'Close'.
-    def onCloseAddPartGUI(event):
-        global dialogAddPart
-        dialogAddPart.Hide()
-
-
-    def onResetAddPartGUI(event):
-        widgetyAddPart['vyber_nazev'].value = ""
-        widgetyAddPart['vyber_cesta_OptiStruct'].value = ""
-        widgetyAddPart['vyber_cesta_Radioss'].value = ""
-        widgetyAddPart['vyber_typ'].value = ""
-
 
     close = gui.Button('Close', command=onCloseAddPartGUI)
     add   = gui.Button('Set compatibility >>>', command=lambda event: checkNotEmpty(event, widgetyAddPart, parts))
