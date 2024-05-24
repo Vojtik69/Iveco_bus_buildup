@@ -18,6 +18,8 @@ print("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
+# TODO: pridej tlacitko, aby vsem radkum pridaridlo 0 nebo 1
+
 def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
     global compatibilityGuiFrame
