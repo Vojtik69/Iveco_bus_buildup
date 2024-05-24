@@ -163,9 +163,9 @@ class DialogEditPart:
         self.dialogEditPart.show(width=600, height=80)
 
 def mainFunc(*args, **kwargs):
-    dialog = DialogEditPart()
-    dialog.show()
-    print("Initiated...")
+    dialogEditPart = DialogEditPart()
+    dialogEditPart.show()
+    print("Initiated EditPart...")
 
 if __name__ == "__main__":
     mainFunc()
