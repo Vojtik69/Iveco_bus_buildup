@@ -28,18 +28,24 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     boxesVehicleSpec = []
     rada1 = ()
     rada2 = ()
-    tableOfParents = {}
+    tableOfSuperordinates = {}
     tableOfSubordinants = {}
     tableOfSpecTypes = {}
+    button_0 = {}
+    button_1 = {}
 
     print(parts)
 
     def onCancelCompatibilityGUI():
         dialogSetCompatibility.Hide()
-        global tableOfParents
+        global tableOfSuperordinates
         global tableOfSubordinants
-        tableOfParents = {}
+        global tableOfSpecTypes
+        tableOfSuperordinates = {}
         tableOfSubordinants = {}
+        tableOfSpecTypes = {}
+        button_0 = {}
+        button_1 = {}
         initiator.show()
 
     boxesVehicleSpec = getVehicleSpecTypes(hierarchyOfTypes)
@@ -86,7 +92,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         for ft, table in tableOfSpecTypes.items():
             parts = goThruTable(table, parts, partName)
 
-        for ft, table in tableOfParents.items():
+        for ft, table in tableOfSuperordinates.items():
             parts = goThruTable(table, parts, partName)
 
         for ft, table in tableOfSubordinants.items():
@@ -167,11 +173,23 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         dialogSetCompatibility.hide()
         gui2.tellUser("Successfully added")
 
+    def setValuesInTable(event, table, value):
+        for row in table.model.model.root.celldata:
+            if len(row) > 0:
+                row[1]["value"] = value
+        return
+
+
     for specType in boxesVehicleSpec:
         labelObject = gui.Label(text=f'{specType}')
         tableOfSpecTypes[specType] = createTable(specType, spec=True)
 
-        rada1 = rada1 + (labelObject, 10,)
+        button_0[specType] = gui.Button('0', maxwidth=20, command=lambda event, t=tableOfSpecTypes[specType], value=0: setValuesInTable(event, t, value))
+        button_1[specType] = gui.Button('1', maxwidth=20, command=lambda event, t=tableOfSpecTypes[specType], value=1: setValuesInTable(event, t, value))
+
+        labelAndButtonsObject = gui.HFrame(labelObject, "<->", button_0[specType], button_1[specType])
+
+        rada1 = rada1 + (labelAndButtonsObject, 10,)
         rada2 = rada2 + (tableOfSpecTypes[specType], 10,)
 
     rada1 = rada1[:-1]
@@ -185,17 +203,23 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     for parent in boxesParents:
         labelObject = gui.Label(text=f'{parent}')
         if parent not in getVehicleSpecTypes(hierarchyOfTypes):
-            tableOfParents[parent] = createTable(parent)
+            tableOfSuperordinates[parent] = createTable(parent)
         else:
             continue
 
-        rada1 = rada1 + (labelObject, 10,)
-        rada2 = rada2 + (tableOfParents[parent], 10,)
+        button_0[parent] = gui.Button('0', maxwidth=20, command=lambda event, t=tableOfSuperordinates[parent], value=0: setValuesInTable(event, t, value))
+        button_1[parent] = gui.Button('1', maxwidth=20, command=lambda event, t=tableOfSuperordinates[parent], value=1: setValuesInTable(event, t, value))
+
+        labelAndButtonsObject = gui.HFrame(labelObject,"<->", button_0[parent], button_1[parent])
+
+        rada1 = rada1 + (labelAndButtonsObject, 10,)
+        rada2 = rada2 + (tableOfSuperordinates[parent], 10,)
+
 
     rada1 = rada1[:-1]
     rada2 = rada2[:-1]
     superior_label = gui.Label(text=f'Superordinates', font={'bold': True})
-    parentsFrame = gui.VFrame(superior_label, rada1, rada2, "<->")
+    parentsFrame = gui.VFrame(superior_label, rada1, rada2)
     rada1 = ()
     rada2 = ()
 
@@ -203,13 +227,18 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         labelObject = gui.Label(text=f'{subordinate}')
         tableOfSubordinants[subordinate] = createTable(subordinate)
 
-        rada1 = rada1 + (labelObject, 10,)
+        button_0[subordinate] = gui.Button('0', maxwidth=20, command=lambda event, t=tableOfSubordinants[subordinate], value=0: setValuesInTable(event, t, value))
+        button_1[subordinate] = gui.Button('1', maxwidth=20, command=lambda event, t=tableOfSubordinants[subordinate], value=1: setValuesInTable(event, t, value))
+
+        labelAndButtonsObject = gui.HFrame(labelObject, "<->", button_0[subordinate], button_1[subordinate])
+
+        rada1 = rada1 + (labelAndButtonsObject, 10,)
         rada2 = rada2 + (tableOfSubordinants[subordinate], 10,)
 
     rada1 = rada1[:-1]
     rada2 = rada2[:-1]
     subordinatesLabel = gui.Label(text=f'Subordinates', font={'bold': True})
-    subordinatesFrame = gui.VFrame(subordinatesLabel, rada1, rada2, "<->")
+    subordinatesFrame = gui.VFrame(subordinatesLabel, rada1, rada2)
     rada1 = ()
     rada2 = ()
 
@@ -243,7 +272,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
     dialogSetCompatibility.setButtonVisibile('ok', False)
     dialogSetCompatibility.setButtonVisibile('cancel', False)
-    dialogSetCompatibility.show(width=900, height=500)
+    dialogSetCompatibility.show(width=900, height=800)
 
 def showCompatibilityGUI(initiator, typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
