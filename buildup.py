@@ -29,8 +29,7 @@ solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 columnWidth = 230
 
-# TODO: Move part
-
+# TODO: Move include after import
 
 def modelBuildupGui():
     global dialogModelBuildup

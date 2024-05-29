@@ -133,8 +133,6 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
         # Write down
         print(parts)
-        # TODO: Změnit cestu
-        # parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         parts.to_csv(csvPath)
         restoreHeaderInCSV(csvPath)
 
@@ -165,8 +163,6 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         parts.iloc[:-1, parts.columns.get_loc(new_column_name)] = last_row_ft.values
         print(f"4:{parts}")
         print(parts)
-        # TODO: Změnit cestu
-        # parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
         parts.to_csv(csvPath)
         restoreHeaderInCSV(csvPath)
 

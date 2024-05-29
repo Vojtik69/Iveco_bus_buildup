@@ -19,8 +19,6 @@ from common import (
 
 from compatibility import SetCompatibilityGUI, showCompatibilityGUI
 
-# TODO: when changed part, update paths i když nemá žádnou hodnotu
-
 class DialogEditPart:
     def __init__(self):
         global parts
