@@ -203,6 +203,21 @@ def findPathToIncludeFile(partDb, selectedSolver, name):
     # print(f"Path: {path}")
     return path.replace("\\","/")
 
+def findTypeOfPart(partDb, name):
+    print(f"name: {name}")
+    if name != "---":
+        matching_parts = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(0).tolist()
+        # print(f"matching_parts: {matching_parts}")
+        # print(f"type: {type(matching_parts[0])}")
+        if matching_parts and isinstance(matching_parts[0], str):
+            partType = matching_parts[0]
+        else:
+            partType = ""
+    else:
+        partType = ""
+    # print(f"Path: {partType}")
+    return partType
+
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
     print_caller_info()
@@ -253,8 +268,11 @@ def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
     return sortAlphabetically(allValues)
 
 
-def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=[],
+def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widgetyBuildup, levelWidgets=None,
                        offset=0):
+    if levelWidgets is None:
+        levelWidgets = []
+
     subgrouping = True if levelWidgets else False
     # every iteration here is new column
     for index, level in enumerate(structure):
@@ -291,7 +309,10 @@ def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widge
 
 
 def getWidgetVehicleSpecStructure(structure, hierarchyOfTypes, parts, widgetyBuildup, selectedSolver,
-                                  vehicleSpecWidgets=[]):
+                                  vehicleSpecWidgets=None):
+    if vehicleSpecWidgets is None:
+        vehicleSpecWidgets = []
+
     for vehicleSpec in structure:
         labelObjekt = gui.Label(text=vehicleSpec.get("name", ""), font={'bold': True})
 
@@ -344,7 +365,7 @@ def saveSetup(event, widgetyBuildup):
 
 def loadSetup(event, widgetyBuildup, selectedSolver):
     def loadFile():
-        resetModelBuildup(None, widgetyBuildup, selectedSolver, parts)
+        resetModelEdit(None, widgetyBuildup, selectedSolver, parts)
         with open(fileEnt1.value, 'r') as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -376,8 +397,8 @@ def loadSetup(event, widgetyBuildup, selectedSolver):
 
 
 # Method called on clicking 'Reset'.
-def resetModelBuildup(event, widgetyBuildup, selectedSolver, parts):
-    for label, widget in widgetyBuildup.items():
+def resetModelEdit(event, ModelEdit, selectedSolver, parts):
+    for label, widget in ModelEdit.items():
         # print(label)
         # print(widget)
         typ = label.replace("vyber_", "")
@@ -453,7 +474,7 @@ def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
     return parts
 
 # Definice funkce pro konverzi na int nebo str
-def covertToIntOrStr(x):
+def convertToIntOrStr(x):
     if x.isdigit():
         print(f"{x} is digit")
         try:
@@ -481,7 +502,7 @@ def restoreHeaderInCSV(csvFile):
 csvPath = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
 def importParts(csvPath=csvPath):
     parts = pd.read_csv(csvPath, index_col=[0, 1, 2, 3],
-                        header=[0, 1, 2], skipinitialspace=True, converters={i: covertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
+                        header=[0, 1, 2], skipinitialspace=True, converters={i: convertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
     parts.columns.names = [None] * len(parts.columns.names)
     return parts
 

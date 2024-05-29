@@ -13,7 +13,7 @@ from hwx import gui as gui2
 
 from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure, saveSetup,
-    loadSetup, resetModelBuildup, importParts, hierarchyOfTypes, tclPath, findCompatibleParts,
+    loadSetup, resetModelEdit, importParts, hierarchyOfTypes, tclPath, findCompatibleParts,
     findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 )
 

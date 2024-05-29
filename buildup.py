@@ -11,7 +11,7 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelBuildup, importParts, hierarchyOfTypes, tclPath, \
+    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, tclPath, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec
 
 print("Initiating...")
@@ -141,7 +141,7 @@ def modelBuildupGui():
     # Method called on clicking 'Reset'.
     def onResetModelBuildup(event):
         global selectedSolver
-        resetModelBuildup(event, widgetyBuildup, selectedSolver, parts)
+        resetModelEdit(event, widgetyBuildup, selectedSolver, parts)
         return
 
     close = gui.Button('Close', command=onCloseModelBuildup)
