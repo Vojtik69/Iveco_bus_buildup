@@ -213,19 +213,21 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
     # print(f"selectedSolver: {selectedSolver}")
     for part in allOfType:
         compatible = True
+        # print(f"part: {part}")
         #if the part has not file for current solver, go next
-
         if pd.isna(parts[parts.index.get_level_values(1) == part].index.get_level_values(selectedSolver)):
-            print("not compatible")
+            # print("not compatible")
             continue
-        print(f"part: {part}")
         for superordinantType in superordinantTypes:
             # print(f"superordinant type: {superordinantType}")
+            # print(f"widgetyBuildup[f'vyber_{superordinantType}'].get() = {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
             if widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
                 # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0])
                 # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())])
                 # print(widgetyBuildup[f'vyber_{superordinantType}'].get())
-                if pd.isna(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]):
+                # print(f"value: {parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]}")
+                value = parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]
+                if pd.isna(value) or value == 0:
                     compatible = False
                     # print(f"compatible: {compatible}")
                     break
