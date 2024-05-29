@@ -190,9 +190,17 @@ def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, nam
 def findPathToIncludeFile(partDb, selectedSolver, name):
     print(f"name: {name}")
     if name != "---":
-        path = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(selectedSolver).tolist()[0]
+        matching_parts = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(
+            selectedSolver).tolist()
+        # print(f"matching_parts: {matching_parts}")
+        # print(f"type: {type(matching_parts[0])}")
+        if matching_parts and isinstance(matching_parts[0], str):
+            path = matching_parts[0]
+        else:
+            path = ""
     else:
         path = ""
+    # print(f"Path: {path}")
     return path.replace("\\","/")
 
 
@@ -469,10 +477,11 @@ def restoreHeaderInCSV(csvFile):
         writer.writerows(lines)
 
 csvPath = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
-
-parts = pd.read_csv(csvPath, index_col=[0, 1, 2, 3],
-                    header=[0, 1, 2], skipinitialspace=True, converters={i: covertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
-parts.columns.names = [None] * len(parts.columns.names)
+def importParts(csvPath=csvPath):
+    parts = pd.read_csv(csvPath, index_col=[0, 1, 2, 3],
+                        header=[0, 1, 2], skipinitialspace=True, converters={i: covertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
+    parts.columns.names = [None] * len(parts.columns.names)
+    return parts
 
 with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
     hierarchyOfTypes = yaml.safe_load(file)

@@ -13,14 +13,18 @@ from hwx import gui as gui2
 
 from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure, saveSetup,
-    loadSetup, resetModelBuildup, parts, hierarchyOfTypes, tclPath, findCompatibleParts,
+    loadSetup, resetModelBuildup, importParts, hierarchyOfTypes, tclPath, findCompatibleParts,
     findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 )
 
 from compatibility import SetCompatibilityGUI, showCompatibilityGUI
 
+# TODO: when changed part, update paths i když nemá žádnou hodnotu
+
 class DialogEditPart:
     def __init__(self):
+        global parts
+        parts = importParts()
         self.currentDir = os.path.dirname(os.path.realpath(__file__))
         sys.path.append(self.currentDir)
         self.widgetyEditPart = {}
@@ -163,6 +167,7 @@ class DialogEditPart:
         self.dialogEditPart.show(width=600, height=80)
 
 def mainFunc(*args, **kwargs):
+    parts = importParts()
     dialogEditPart = DialogEditPart()
     dialogEditPart.show()
     print("Initiated EditPart...")

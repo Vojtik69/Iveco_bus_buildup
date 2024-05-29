@@ -13,11 +13,13 @@ import pandas as pd
 
 from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure, saveSetup,
-    loadSetup, resetModelBuildup, parts, hierarchyOfTypes, tclPath, findCompatibleParts,
+    loadSetup, resetModelBuildup, importParts, hierarchyOfTypes, tclPath, findCompatibleParts,
     findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 )
 
 from compatibility import SetCompatibilityGUI, showCompatibilityGUI
+
+parts = importParts()
 
 class DialogAddPart:
     def __init__(self):

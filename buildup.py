@@ -11,10 +11,12 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelBuildup, parts, hierarchyOfTypes, tclPath, \
+    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelBuildup, importParts, hierarchyOfTypes, tclPath, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec
 
 print("Initiating...")
+
+parts = importParts()
 
 # Slovník pro uchování vytvořených widgetů
 widgetyBuildup = {}
@@ -26,6 +28,8 @@ selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, w
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 columnWidth = 230
+
+# TODO: Move part
 
 
 def modelBuildupGui():

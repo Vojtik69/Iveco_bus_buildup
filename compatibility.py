@@ -18,8 +18,6 @@ print("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
-# TODO: pridej tlacitko, aby vsem radkum pridaridlo 0 nebo 1
-
 def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     global dialogSetCompatibility
     global compatibilityGuiFrame
@@ -136,7 +134,8 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         # Write down
         print(parts)
         # TODO: Změnit cestu
-        parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
+        # parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
+        parts.to_csv(csvPath)
         restoreHeaderInCSV(csvPath)
 
         dialogSetCompatibility.hide()
@@ -167,8 +166,10 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         print(f"4:{parts}")
         print(parts)
         # TODO: Změnit cestu
-        parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
+        # parts.to_csv("N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility_2.csv")
+        parts.to_csv(csvPath)
         restoreHeaderInCSV(csvPath)
+
 
         dialogSetCompatibility.hide()
         gui2.tellUser("Successfully added")
