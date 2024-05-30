@@ -133,7 +133,10 @@ def modelBuildupGui():
         hw.evalTcl(f'puts "Going to end batch import"')
         hw.evalTcl(f'*end_batch_import')
         print("realizing connectors")
-        hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+        try:
+            hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+        except:
+            print("not able to realize connectors")
         onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
         dialogModelBuildup = gui.Dialog(caption="Bus model build-up")

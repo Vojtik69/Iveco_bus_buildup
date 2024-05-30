@@ -29,8 +29,6 @@ solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 columnWidth = 230
 
-# TODO: Move include after import
-
 def modelEditGui():
     global dialogModelEdit
     global selectedSolver
@@ -42,22 +40,51 @@ def modelEditGui():
 
     # Method called on clicking 'Build-up'.
     def onEditModel(event):
-        # TODO upravit pro edit
-        # TODO myslet na to, že se musí porovnávat nově vybrané položky proti listu existujícíchc includů a pokud něco přebývá, tak nahrát, pokud něco chybí, tak smazat
+        # TODO otestovat
 
-        global selectedSolver
-        print(f"BuildUp")
-        print(f"selectedSolver: {selectedSolver}")
-        print(f"solverInterface: {solverInterface[selectedSolver - 2]}")
-        # Using "changing_interface_finished; vwait global_variable" is necessary because of bug in HyperMesh which continues in next Tcl commands before the Solver Interface is completely changed
-        hw.evalTcl(f'source "{tclPath}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]} changing_interface_finished; vwait change_finished')
+        listOfIncludes = hw.evalTcl(f"hm_getincludes -byshortname").split()
+        listOfIncludesIds = hw.evalTcl(f"hm_getincludes").split()
+        partTypes = []
+        for include in listOfIncludes:
+            partType = findTypeOfPart(parts, include)
+            if partType:
+                partTypes.append(partType)
+
+        data = []
+        for label, widget in widgetyModelEdit.items():
+            if isinstance(widget, gui2.ListBox):
+                items = widget.items
+                selectedIndexes = widget.selectedIndexes
+                if selectedIndexes:
+                    for index in selectedIndexes:
+                        data.append(items[index])
+            elif isinstance(widget, gui2.ComboBox):
+                selectedValue = widget.value
+                data.append(selectedValue)
         hw.evalTcl(f'*start_batch_import 2')
-
-        print("ending batch import")
-        hw.evalTcl(f'puts "Going to end batch import"')
+        for part in data:
+            if part != "---":
+                if part in listOfIncludes:
+                    index = listOfIncludes.index(part)
+                    del listOfIncludesIds[index]
+                    listOfIncludes.remove(part)
+                else:
+                    path = findPathToIncludeFile(parts, selectedSolver, part)
+                    print(f"path: {path}")
+                    if os.path.exists(path):
+                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedValue}"')
+                    else:
+                        print(f"Include file {path} does not exist. Skipping this include.")
         hw.evalTcl(f'*end_batch_import')
+
+        # delete the unused includes
+        hw.evalTcl(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+
         print("realizing connectors")
-        hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+        try:
+            hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+        except:
+            print("not able to realize connectors")
         onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
         dialogModelEdit = gui.Dialog(caption="Bus model edit")
@@ -70,17 +97,33 @@ def modelEditGui():
 
     def loadCurrentIncludes():
         listOfIncludes = hw.evalTcl(f"hm_getincludes -byshortname").split()
+        partTypes = []
         for include in listOfIncludes:
             partType = findTypeOfPart(parts, include)
-            print(f"include-type: {include}-{partType}")
-            try:
-                widgetyModelEdit[f'vyber_{partType}'].set(include)
-            #     TODO zohlednit i multiselect
-            except:
-                print(f"{partType} nenalezen")
-                pass
+            if partType:
+                partTypes.append(partType)
 
-
+        # print(f"partTypes: {partTypes}")
+        for i, (widgetKey, widget) in enumerate(widgetyModelEdit.items()):
+            if widgetKey.startswith("vyber"):
+                # print(f"widgetKey.split('_')[1] - {widgetKey.split('_')[1]}")
+                partType = widgetKey.split('_')[1]
+                if partType in partTypes:
+                    partIndex = partTypes.index(partType)
+                    # print("is in partTypes")
+                    try:
+                        # print(f"listOfIncludes[partIndex]: {listOfIncludes[partIndex]}")
+                        if isinstance(widget, gui2.ListBox):
+                            # print(f"ListBox")
+                            for index, item in enumerate(widget.items):
+                                if item == listOfIncludes[partIndex]:
+                                    widget.select(index)
+                        elif isinstance(widget, gui2.ComboBox):
+                            # print(f"ComboBox")
+                            widget.value = listOfIncludes[partIndex]
+                    except:
+                        print(f"Error in selecting parts in ComboBox or Listbox")
+                        pass
         return
 
     close = gui.Button('Close', command=onCloseModelBuildup)
