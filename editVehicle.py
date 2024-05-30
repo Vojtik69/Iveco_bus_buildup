@@ -42,6 +42,12 @@ def modelEditGui():
     def onEditModel(event):
         # TODO otestovat
 
+        userProfile = hw.evalTcl(f"hm_framework getuserprofile")
+        if userProfile == "OptiStruct {}":
+            selectedSolver = 2
+        else:
+            selectedSolver = 3
+
         listOfIncludes = hw.evalTcl(f"hm_getincludes -byshortname").split()
         listOfIncludesIds = hw.evalTcl(f"hm_getincludes").split()
         partTypes = []
@@ -78,7 +84,10 @@ def modelEditGui():
         hw.evalTcl(f'*end_batch_import')
 
         # delete the unused includes
-        hw.evalTcl(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+        try:
+            hw.evalTcl(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+        except:
+            print("Unable to delete rest of includes")
 
         print("realizing connectors")
         try:
