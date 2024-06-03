@@ -20,6 +20,7 @@ proc changing_interface_finished {} {
 }
 
 proc realize_connectors {} {
+*setoption g_ce_elem_org_option=4
 *clearmark connectors 1
 *createmark connectors 1 "all"
 *CE_Realize 1
