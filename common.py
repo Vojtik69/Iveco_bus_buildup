@@ -1,5 +1,5 @@
 import os
-
+import os
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -13,6 +13,12 @@ import re
 import traceback
 
 print("loading common.py")
+
+paths = {
+    "csv"           : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv",
+    "hierarchy"     : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml",
+    "tcl"           : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
+}
 
 def print_caller_info():
     stack_trace = traceback.extract_stack()
@@ -77,13 +83,6 @@ def findPathToName(hierarchy, name, currentPath=[]):
             if result is not None:
                 return result
     return None
-
-
-# not used
-# def load_include_file(parts, part):
-#     hw.evalTcl(f'puts "Importing {part}..."')
-#     include_file_path = find_path_to_include_file(parts, part).replace("\\","/")
-#     return include_file_path
 
 
 def getElementByPath(hierarchy, path):
@@ -499,16 +498,14 @@ def restoreHeaderInCSV(csvFile):
         writer = csv.writer(file)
         writer.writerows(lines)
 
-csvPath = 'N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv'
-def importParts(csvPath=csvPath):
+def importParts(csvPath=paths["csv"]):
     parts = pd.read_csv(csvPath, index_col=[0, 1, 2, 3],
                         header=[0, 1, 2], skipinitialspace=True, converters={i: convertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
     parts.columns.names = [None] * len(parts.columns.names)
     return parts
 
-with open('N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml', 'r') as file:
+with open(paths["hierarchy"], 'r') as file:
     hierarchyOfTypes = yaml.safe_load(file)
-tclPath = "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
 
 
 

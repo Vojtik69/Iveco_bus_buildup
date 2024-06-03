@@ -11,7 +11,7 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, tclPath, \
+    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec
 
 print("Initiating...")
@@ -91,7 +91,7 @@ def modelBuildupGui():
         print(f"selectedSolver: {selectedSolver}")
         print(f"solverInterface: {solverInterface[selectedSolver - 2]}")
         # Using "changing_interface_finished; vwait global_variable" is necessary because of bug in HyperMesh which continues in next Tcl commands before the Solver Interface is completely changed
-        hw.evalTcl(f'source "{tclPath}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]} changing_interface_finished; vwait change_finished')
+        hw.evalTcl(f'source "{paths["tcl"]}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[selectedSolver - 2]} changing_interface_finished; vwait change_finished')
         hw.evalTcl(f'*start_batch_import 2')
         for label, widget in widgetyBuildup.items():
             print(f"Widget: {widget}")
@@ -110,7 +110,7 @@ def modelBuildupGui():
                         path = findPathToIncludeFile(parts, selectedSolver, selectedItem)
                         print(f"path: {path}")
                         if os.path.exists(path):
-                            hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedItem}"')
+                            hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}"')
                         else:
                             print(f"Include file {path} does not exist. Skipping this include.")
                     else:
@@ -124,7 +124,7 @@ def modelBuildupGui():
                     path = findPathToIncludeFile(parts, selectedSolver, selectedValue)
                     print(f"path: {path}")
                     if os.path.exists(path):
-                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedValue}"')
+                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}"')
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
                 else:
@@ -134,7 +134,7 @@ def modelBuildupGui():
         hw.evalTcl(f'*end_batch_import')
         print("realizing connectors")
         try:
-            hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+            hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
             print("not able to realize connectors")
         onCloseModelBuildup(None)

@@ -12,7 +12,7 @@ from hwx import gui as gui2
 from pprint import pprint
 import pandas as pd
 
-from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility, setCompatibility, csvPath, restoreHeaderInCSV
+from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility, setCompatibility, paths, restoreHeaderInCSV
 
 print("Initiating Compatibility GUI...")
 
@@ -133,8 +133,8 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
         # Write down
         print(parts)
-        parts.to_csv(csvPath)
-        restoreHeaderInCSV(csvPath)
+        parts.to_csv(paths["csv"])
+        restoreHeaderInCSV(paths["csv"])
 
         dialogSetCompatibility.hide()
         gui2.tellUser("Successfully edited")
@@ -163,8 +163,8 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         parts.iloc[:-1, parts.columns.get_loc(new_column_name)] = last_row_ft.values
         print(f"4:{parts}")
         print(parts)
-        parts.to_csv(csvPath)
-        restoreHeaderInCSV(csvPath)
+        parts.to_csv(paths["csv"])
+        restoreHeaderInCSV(paths["csv"])
 
 
         dialogSetCompatibility.hide()

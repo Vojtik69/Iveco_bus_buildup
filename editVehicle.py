@@ -11,7 +11,7 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, tclPath, \
+    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart
 
 print("Initiating...")
@@ -78,7 +78,7 @@ def modelEditGui():
                     path = findPathToIncludeFile(parts, selectedSolver, part)
                     print(f"path: {path}")
                     if os.path.exists(path):
-                        hw.evalTcl(f'source "{tclPath}"; import_data "{path}" "{selectedValue}"')
+                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}"')
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
         hw.evalTcl(f'*end_batch_import')
@@ -91,7 +91,7 @@ def modelEditGui():
 
         print("realizing connectors")
         try:
-            hw.evalTcl(f'source "{tclPath}"; realize_connectors')
+            hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
             print("not able to realize connectors")
         onCloseModelBuildup(None)

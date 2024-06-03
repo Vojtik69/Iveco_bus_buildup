@@ -13,7 +13,7 @@ import pandas as pd
 
 from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure, saveSetup,
-    loadSetup, resetModelEdit, importParts, hierarchyOfTypes, tclPath, findCompatibleParts,
+    loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, findCompatibleParts,
     findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 )
 
