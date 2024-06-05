@@ -12,10 +12,11 @@ from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, \
-    findCompatibleParts, findAllOfType, getValuesForVehicleSpec
+    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, getSelectedSolver, solverInterface
 
 print("Initiating...")
 
+# TODO načítat všechny inicializační věci při každém spuštění funkce
 parts = importParts()
 
 # Slovník pro uchování vytvořených widgetů
@@ -23,9 +24,7 @@ widgetyBuildup = {}
 
 dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
-
-selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
-solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
+selectedSolver = getSelectedSolver()
 
 columnWidth = 230
 
@@ -110,7 +109,7 @@ def modelBuildupGui():
                         path = findPathToIncludeFile(parts, selectedSolver, selectedItem)
                         print(f"path: {path}")
                         if os.path.exists(path):
-                            hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}"')
+                            hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
                         else:
                             print(f"Include file {path} does not exist. Skipping this include.")
                     else:
@@ -124,7 +123,7 @@ def modelBuildupGui():
                     path = findPathToIncludeFile(parts, selectedSolver, selectedValue)
                     print(f"path: {path}")
                     if os.path.exists(path):
-                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}"')
+                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}" "{selectedSolver}"')
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
                 else:
@@ -150,11 +149,10 @@ def modelBuildupGui():
     close = gui.Button('Close', command=onCloseModelBuildup)
     buildup = gui.Button('Build-up', command=lambda event: onBuildUpModelBuildup(event))
     reset = gui.Button('Reset', command=onResetModelBuildup)
-    solver = gui2.ComboBox([(2,"OptiStruct"), (3,"Radioss")], command=lambda event: solverChange(event,
-                                                                                                 hierarchyOfTypes,
-                                                                                                 parts, widgetyBuildup), name="solver", width=150)
-    # solver = gui2.ComboBox([(2, "OptiStruct"), (3, "Radioss")], command=lambda event: print(selectedSolver),
-    #                        name="solver", width=150)
+
+    solver_values = [(2,"OptiStruct"), (3,"Radioss")] if hw.evalTcl(f"hm_framework getuserprofile") == "OptiStruct {}" else [(3,"Radioss"), (2,"OptiStruct")]
+    solver = gui2.ComboBox(solver_values, command=lambda event: solverChange(event,hierarchyOfTypes,parts, widgetyBuildup), name="solver", width=150)
+
     load = gui.Button('Load setup', command=lambda event: loadSetup(event, widgetyBuildup, selectedSolver))
     save = gui.Button('Save setup', command=lambda event: saveSetup(event, widgetyBuildup))
 

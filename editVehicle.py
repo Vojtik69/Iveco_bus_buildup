@@ -12,7 +12,7 @@ from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, \
-    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart
+    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface
 
 print("Initiating...")
 
@@ -23,9 +23,7 @@ widgetyModelEdit = {}
 
 dialogModelEdit = gui.Dialog(caption="Bus model edit")
 
-
-selectedSolver = 2 #2-optistruct, 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
-solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
+selectedSolver = getSelectedSolver()
 
 columnWidth = 230
 
@@ -49,6 +47,7 @@ def modelEditGui():
             selectedSolver = 3
 
         listOfIncludes = hw.evalTcl(f"hm_getincludes -byshortname").split()
+        print(f"listOfIncludes: {listOfIncludes}")
         listOfIncludesIds = hw.evalTcl(f"hm_getincludes").split()
         partTypes = []
         for include in listOfIncludes:
@@ -58,6 +57,7 @@ def modelEditGui():
 
         data = []
         for label, widget in widgetyModelEdit.items():
+            print(f"label: {label}")
             if isinstance(widget, gui2.ListBox):
                 items = widget.items
                 selectedIndexes = widget.selectedIndexes
@@ -67,6 +67,7 @@ def modelEditGui():
             elif isinstance(widget, gui2.ComboBox):
                 selectedValue = widget.value
                 data.append(selectedValue)
+        print(f"data: {data}")
         hw.evalTcl(f'*start_batch_import 2')
         for part in data:
             if part != "---":
@@ -78,7 +79,7 @@ def modelEditGui():
                     path = findPathToIncludeFile(parts, selectedSolver, part)
                     print(f"path: {path}")
                     if os.path.exists(path):
-                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}"')
+                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}" "{selectedSolver}"')
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
         hw.evalTcl(f'*end_batch_import')
@@ -101,38 +102,42 @@ def modelEditGui():
     # Method called on clicking 'Reset'.
     def onResetModelBuildup(event):
         global selectedSolver
-        resetModelEdit(event, widgetyModelEdit, selectedSolver, parts)
+        loadCurrentIncludes()
         return
 
     def loadCurrentIncludes():
+        # TODO opravit že nevybere správný solver
         listOfIncludes = hw.evalTcl(f"hm_getincludes -byshortname").split()
         partTypes = []
         for include in listOfIncludes:
             partType = findTypeOfPart(parts, include)
             if partType:
                 partTypes.append(partType)
+        print(f"listOfIncludes: {listOfIncludes}")
+        print(f"partTypes: {partTypes}")
 
-        # print(f"partTypes: {partTypes}")
-        for i, (widgetKey, widget) in enumerate(widgetyModelEdit.items()):
-            if widgetKey.startswith("vyber"):
-                # print(f"widgetKey.split('_')[1] - {widgetKey.split('_')[1]}")
-                partType = widgetKey.split('_')[1]
-                if partType in partTypes:
-                    partIndex = partTypes.index(partType)
-                    # print("is in partTypes")
-                    try:
-                        # print(f"listOfIncludes[partIndex]: {listOfIncludes[partIndex]}")
-                        if isinstance(widget, gui2.ListBox):
-                            # print(f"ListBox")
-                            for index, item in enumerate(widget.items):
-                                if item == listOfIncludes[partIndex]:
-                                    widget.select(index)
-                        elif isinstance(widget, gui2.ComboBox):
-                            # print(f"ComboBox")
-                            widget.value = listOfIncludes[partIndex]
-                    except:
-                        print(f"Error in selecting parts in ComboBox or Listbox")
-                        pass
+        for i, includeName in enumerate(listOfIncludes):
+            partType = partTypes[i]
+            print(f"partType: {partType}")
+            print(f"includeName: {includeName}")
+            try:
+                widget = widgetyModelEdit[f"vyber_{partType}"]
+            except:
+                continue
+
+            try:
+                if isinstance(widget, gui2.ListBox):
+                    print(f"ListBox")
+                    for index, item in enumerate(widget.items):
+                        if item == includeName:
+                            print(f"index, item: {index, item}")
+                            widget.select(index)
+                elif isinstance(widget, gui2.ComboBox):
+                    print(f"ComboBox")
+                    widget.value = includeName
+            except:
+                print(f"Error in selecting parts in ComboBox or Listbox")
+                pass
         return
 
     close = gui.Button('Close', command=onCloseModelBuildup)

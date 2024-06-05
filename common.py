@@ -25,24 +25,24 @@ def print_caller_info():
     caller_name = stack_trace[-3].name
     caller_file = os.path.basename(stack_trace[-3].filename)
     caller_line = stack_trace[-3].lineno
-    print(f"SortAlphabetically byla volána funkcí {caller_name} ze souboru: {caller_file}, na řádku: {caller_line}")
+    print(f"Voláno funkcí {caller_name} ze souboru: {caller_file}, na řádku: {caller_line}")
 
 def alphanum_key(s):
     # Rozdělí řetězec na části, kde čísla jsou konvertována na int a zbytek zůstává jako string
     return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
 
 def sortAlphabetically(items):
-    print_caller_info()
+    # print_caller_info()
     new_items = items
     if hasattr(new_items, '__iter__') and not isinstance(new_items, str):
         # Použije přirozené řazení s použitím alphanum_key jako klíčové funkce
-        print(f"list pred: {new_items}")
+        # print(f"list pred: {new_items}")
         if '---' in new_items:
             new_items.remove('---')
-            print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            # print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
             return ['---'] + sorted(new_items, key=alphanum_key)
         else:
-            print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            # print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
             return sorted(new_items, key=alphanum_key)
 
     else:
@@ -50,7 +50,7 @@ def sortAlphabetically(items):
 
 def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
     allOfType = ["---"]
-    # print(searchedType)
+    print(searchedType)
     if removeEmpty:
         allOfType = []
     for index, row in parts.iterrows():
@@ -219,7 +219,7 @@ def findTypeOfPart(partDb, name):
 
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
-    print_caller_info()
+    # print_caller_info()
     compatibles = [] if removeEmpty else ["---"]
     superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
@@ -283,7 +283,7 @@ def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widge
             levelWidgets.append([(labelGroup)])
         for ft in level.get("FTs", []):
             labelObjekt = gui.Label(text=ft.get("name", ""))
-
+            print(f"FT název: {ft.get('name', '')}")
             if ft.get("multiselection", False):
                 vyberObjekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
                 vyberObjekt.append(findAllOfType(parts, selectedSolver, ft.get('name', ""), removeEmpty=True))
@@ -475,12 +475,12 @@ def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
 # Definice funkce pro konverzi na int nebo str
 def convertToIntOrStr(x):
     if x.isdigit():
-        print(f"{x} is digit")
+        # print(f"{x} is digit")
         try:
             return int(x)
         except ValueError:
             return str(x)
-    print(f"{x} NOT digit")
+    # print(f"{x} NOT digit")
     return str(x)
 
 def restoreHeaderInCSV(csvFile):
@@ -503,6 +503,18 @@ def importParts(csvPath=paths["csv"]):
                         header=[0, 1, 2], skipinitialspace=True, converters={i: convertToIntOrStr for i in range(len(pd.read_csv(csvPath).columns))})
     parts.columns.names = [None] * len(parts.columns.names)
     return parts
+
+def getSelectedSolver():
+    userProfile = hw.evalTcl(f"hm_framework getuserprofile")
+    print(userProfile)
+    # 2-optistruct 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
+    if userProfile == "OptiStruct {}":
+        selectedSolver = 2
+    else:
+        selectedSolver = 3
+    return selectedSolver
+
+solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 with open(paths["hierarchy"], 'r') as file:
     hierarchyOfTypes = yaml.safe_load(file)
