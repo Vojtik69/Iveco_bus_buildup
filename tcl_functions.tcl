@@ -28,9 +28,12 @@ proc changing_interface_finished {} {
 }
 
 proc realize_connectors {} {
+# TODO: update link
 *setoption g_ce_elem_org_option=4
 *clearmark connectors 1
 *createmark connectors 1 "all"
+*CE_MarkUpdateLink 1 comps 4 4
+*CE_ConnectorRemoveDuplicates 1 0.1
 *CE_Realize 1
 *clearmark connectors 1
 }

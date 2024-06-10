@@ -258,6 +258,7 @@ def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolv
 
 
 def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
+    print_caller_info()
     print(f"vehicle_spec_type: {vehicleSpecType}")
     allValues = [] if removeEmpty else ["---"]
     print(f"all_values: {allValues}")
