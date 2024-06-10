@@ -19,8 +19,6 @@ from common import (
 
 from compatibility import SetCompatibilityGUI, showCompatibilityGUI
 
-# TODO: Udělat tlačítko Add copy
-
 class DialogEditPart:
     def __init__(self):
         global parts
