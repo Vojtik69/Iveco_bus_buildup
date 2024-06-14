@@ -141,7 +141,7 @@ class ModelBuildup:
         solver = gui2.ComboBox(solver_values, command=lambda event: self.solverChange(event), name="solver", width=150)
 
         load = gui.Button('Load setup',
-                          command=lambda event: loadSetup(event, self.widgetyBuildup, self.selectedSolver))
+                          command=lambda event: loadSetup(event, self.widgetyBuildup, self.selectedSolver, self.parts))
         save = gui.Button('Save setup', command=lambda event: saveSetup(event, self.widgetyBuildup))
 
         vehicleSpecFrame = gui.HFrame(

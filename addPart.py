@@ -12,8 +12,8 @@ from hwx import gui as gui2
 import pandas as pd
 
 from common import (
-    findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure, saveSetup,
-    loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, findCompatibleParts,
+    findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure,
+    resetModelEdit, importParts, hierarchyOfTypes, paths, findCompatibleParts,
     findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
 )
 

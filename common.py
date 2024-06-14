@@ -363,7 +363,7 @@ def saveSetup(event, widgetyBuildup):
     dialogSaveSetup.show(height = 100)
 
 
-def loadSetup(event, widgetyBuildup, selectedSolver):
+def loadSetup(event, widgetyBuildup, selectedSolver, parts):
     def loadFile():
         resetModelEdit(None, widgetyBuildup, selectedSolver, parts)
         with open(fileEnt1.value, 'r') as file:

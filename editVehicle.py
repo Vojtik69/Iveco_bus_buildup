@@ -11,7 +11,7 @@ from hwx.xmlui import gui
 from hwx import gui as gui2
 
 from common import findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths, \
+    getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface
 
 
