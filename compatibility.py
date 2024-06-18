@@ -5,6 +5,7 @@ currentDir = os.path.dirname(os.path.realpath(__file__))
 print(f"dirname: {currentDir}")
 # Přidání této cesty do sys.path
 sys.path.append(currentDir)
+import hwui
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -174,7 +175,10 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         for row in table.model.model.root.celldata:
             if len(row) > 0:
                 row[1]["value"] = value
+        model = table.model.model
+        model.DataChanged(model.Index(0, 0, hwui.uiModelIndex()), model.Index(table.numRows() -1, table.numCols() - 1,  hwui.uiModelIndex()))
         return
+
 
 
     for specType in boxesVehicleSpec:
