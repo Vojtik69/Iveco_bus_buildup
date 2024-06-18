@@ -36,22 +36,31 @@ proc relink_connectors {} {
     *clearmark connectors 1
     *createmark connectors 1 "all"
     set inputList [hm_ce_datalist 1]
-    set thicknessLists [list {} {} {} {} {} {}]
 
+    set createarrayCmd "*createarray"
+    set num_elements [llength $inputList]
+    # Append the count of elements in inputList multiplied by 2 (each ID followed by -1)
+    append createarrayCmd " [expr {$num_elements * 2}]"
     foreach item $inputList {
         set id [lindex $item 0]
-        set thickness [lindex $item 1]
-        lset thicknessLists $thickness [linsert [lindex $thicknessLists $thickness] end $id]
+        append createarrayCmd " $id -1"
     }
+    eval $createarrayCmd
 
-    foreach thicknessIndex {1 2 3 4 5} {
-        set currentList [lindex $thicknessLists $thicknessIndex]
-        if {[llength $currentList] > 0} {
-            *createmark connectors 1 $currentList
-            *createmark comps 2 "all"
-            *CE_AddLinkEntitiesWithRules 1 comps 2 1 1 1 1 1.0 $thicknessIndex
-        }
+    *createmark components 2 "displayed"
+
+    set createdoublearrayCmd "*createdoublearray $num_elements"
+    # Append the required number of zeros
+    for {set i 0} {$i < $num_elements} {incr i} {
+        append createdoublearrayCmd " 0"
     }
+    # Evaluate the final command
+    eval $createdoublearrayCmd
+
+    *createstringarray 5 "ce_spot_extralinknum=0" "ce_seam_extralinknum=0" "ce_spot_non_normal=1" \
+      "ce_area_non_normal=0" "ce_preferdifflinksperlayer=0"
+    *CE_AddLinkEntitiesWithArrays 1 [expr {$num_elements * 2}] components 2 1 1 1 1 1 $num_elements 0 1 5
+
 }
 
 proc realize_in_order {what} {
@@ -97,7 +106,6 @@ proc realize_in_order {what} {
 
 
 proc realize_connectors {} {
-    # TODO: po realizaci vzít nerealizované, které mají 3 layers, změnit na 2 znovu najít linky a realizovat
     *setoption g_ce_elem_org_option=4
     relink_connectors
     *clearmark connectors 1
