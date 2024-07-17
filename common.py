@@ -176,9 +176,24 @@ def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, nam
     for subordinant in subordinants:
         # if it is multiselection ListBox
         if isinstance(widgetyBuildup[f'vyber_{subordinant}'], gui2.ListBox):
+            # save selected
+            items = widgetyBuildup["vyber_" + subordinant].items
+            selectedIndexes = widgetyBuildup["vyber_" + subordinant].selectedIndexes
+            if selectedIndexes:
+                selectedItems = [items[index] for index in selectedIndexes]
+            else:
+                selectedItems = []
+
+            # load compatibles
             widgetyBuildup["vyber_" + subordinant].clear()
             widgetyBuildup["vyber_" + subordinant].append(
                 findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=True))
+
+            # restore selected
+            for index, item in enumerate(widgetyBuildup["vyber_" + subordinant].items):
+                if item in selectedItems:
+                    widgetyBuildup["vyber_" + subordinant].select(index)
+
         # if it is onlyselection Combo
         else:
             pass
@@ -515,10 +530,23 @@ def getSelectedSolver():
         selectedSolver = 3
     return selectedSolver
 
+
+def findLevel(data, targetName, currentLevel=1):
+    if isinstance(data, list):
+        for item in data:
+            result = findLevel(item, targetName, currentLevel)
+            if result is not None:
+                return result
+    elif isinstance(data, dict):
+        if 'name' in data and data['name'] == targetName:
+            return currentLevel
+        for key, value in data.items():
+            result = findLevel(value, targetName, currentLevel + 1)
+            if result is not None:
+                return result
+    return None
+
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
 with open(paths["hierarchy"], 'r') as file:
     hierarchyOfTypes = yaml.safe_load(file)
-
-
-

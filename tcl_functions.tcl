@@ -103,8 +103,6 @@ proc realize_in_order {what} {
     }
 }
 
-
-
 proc realize_connectors {} {
     *setoption g_ce_elem_org_option=4
     relink_connectors
@@ -117,12 +115,19 @@ proc realize_connectors {} {
     *modelcheck_applyautocorrection Multiple Rigids or RBE3s sharing nodes ALL ALL 0
 }
 
+proc move_include {include x y z} {
+    *createmark nodes 1 "by include shortname" $include
+    *createmark connectors 1 "by include shortname" $include
+
+    *createvector 1 $x $y $z
+
+    *translatemark nodes 1 1 [expr {sqrt($x*$x + $y*$y + $z*$z)}]
+    *translatemark connectors 1 1 [expr {sqrt($x*$x + $y*$y + $z*$z)}]
+
+}
 
 
 
-
-
-#TODO: Move Part
 
 #======position ======
 #*positionentity nodes mark=1 "source_coords={-8938.2431640625 -926.2951049805 3203.4934082031}" "target_coords={-9177.6240234375 -926.2906494141 3203.4904785156}"

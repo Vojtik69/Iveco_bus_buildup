@@ -14,6 +14,7 @@ from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface
 
+# TODO: Move part when changing part
 
 class ModelEdit:
     def __init__(self):

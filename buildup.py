@@ -5,6 +5,7 @@ currentDir = os.path.dirname(os.path.realpath(__file__))
 print(f"dirname: {currentDir}")
 # Přidání této cesty do sys.path
 sys.path.append(currentDir)
+import re
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -13,7 +14,7 @@ from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure,
     saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths,
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, getSelectedSolver,
-    solverInterface, print_caller_info
+    solverInterface, print_caller_info, findLevel, findCompatibility
 )
 
 
@@ -82,9 +83,11 @@ class ModelBuildup:
             f'source "{paths["tcl"]}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[self.selectedSolver - 2]} changing_interface_finished; vwait change_finished')
         hw.evalTcl(f'*start_batch_import 2')
 
-        for label, widget in self.widgetyBuildup.items():
-            print(f"Widget: {widget}")
+        # Příprava potřebných dat
+        import_data = []
 
+        for label, widget in self.widgetyBuildup.items():
+            label = label.replace('vyber_', '')
             if isinstance(widget, gui2.ListBox):
                 items = widget.items
                 selectedIndexes = widget.selectedIndexes
@@ -93,12 +96,8 @@ class ModelBuildup:
                 for selectedItem in selectedItems:
                     if selectedItem != "---":
                         path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedItem)
-                        print(f"path: {path}")
-                        if os.path.exists(path):
-                            hw.evalTcl(
-                                f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{self.selectedSolver}"')
-                        else:
-                            print(f"Include file {path} does not exist. Skipping this include.")
+                        hierarchy = findLevel(hierarchyOfTypes, label)
+                        import_data.append((label, path, selectedItem, self.selectedSolver, hierarchy))
                     else:
                         print(f"selectedItem: {selectedItem}")
 
@@ -106,14 +105,38 @@ class ModelBuildup:
                 selectedValue = widget.value
                 if selectedValue != "---":
                     path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedValue)
-                    print(f"path: {path}")
-                    if os.path.exists(path):
-                        hw.evalTcl(
-                            f'source "{paths["tcl"]}"; import_data "{path}" "{selectedValue}" "{self.selectedSolver}"')
-                    else:
-                        print(f"Include file {path} does not exist. Skipping this include.")
+                    hierarchy = findLevel(hierarchyOfTypes, label)
+                    import_data.append((label, path, selectedValue, self.selectedSolver, hierarchy))
                 else:
                     print(f"selectedItem: {selectedValue}")
+
+        print(import_data)
+        sortedImportData = sorted(import_data, key=lambda x: x[4], reverse=True)
+        print(sortedImportData)
+
+        # Realizace loop a příkazů na připravených datech
+        for label, path, selectedItem, selectedSolver, hierarchy in import_data:
+            print(f"Label: {label}, path: {path}")
+            if os.path.exists(path):
+                hw.evalTcl(
+                    f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
+                for label2, path2, selectedItem2, selectedSolver2, hierarchy2 in sortedImportData:
+                    if hierarchy2 < hierarchy:
+                        compatibilityValue = findCompatibility(self.parts, selectedItem, selectedItem2)
+                        print(f"compatibilita: {selectedItem} + {selectedItem2}: {compatibilityValue}")
+                        if not isinstance(compatibilityValue, int):
+                            if '[' in compatibilityValue and ']' in compatibilityValue:
+                                print("budeme posouvat")
+                                numbers = re.findall(r'\d+', compatibilityValue)
+                                x, y, z = map(int, numbers)
+                                hw.evalTcl(
+                                    f'source "{paths["tcl"]}"; move_include "{selectedItem}" {x} {y} {z}')
+                                break
+                            else:
+                                print("compatibility value is not int and does not contain both brackets [ and ]")
+            else:
+                print(f"Include file {path} does not exist. Skipping this include.")
+
 
         print("ending batch import")
         hw.evalTcl(f'puts "Going to end batch import"')
