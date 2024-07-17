@@ -14,8 +14,6 @@ from common import findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface
 
-# TODO: Move part when changing part
-
 class ModelEdit:
     def __init__(self):
         self.currentDir = os.path.dirname(os.path.realpath(__file__))
@@ -64,12 +62,16 @@ class ModelEdit:
                     index = listOfIncludes.index(part)
                     del listOfIncludesIds[index]
                     listOfIncludes.remove(part)
+                    #     TODO: is it possible to move it, according to new parts?
+                    #     TODO: recognise if already moved
                 else:
                     path = findPathToIncludeFile(self.parts, self.selectedSolver, part)
                     print(f"part: {part}")
                     print(f"path: {path}")
                     if os.path.exists(path):
                         hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
+                        # TODO: Move part when changing part
+
                     else:
                         print(f"Include file {path} does not exist. Skipping this include.")
         hw.evalTcl('*end_batch_import')
@@ -99,6 +101,13 @@ class ModelEdit:
         print(f"selectedSolver: {self.selectedSolver}")
 
         listOfIncludes = hw.evalTcl("hm_getincludes -byshortname").split()
+
+        # remove ends of names in cases the include is moved and the name is ende by suffix _move_x_y_z
+        listOfIncludes = [
+            item[:item.find('_moved')] if item.find('_moved') != -1 else item
+            for item in listOfIncludes
+        ]
+
         partTypes = []
         for include in listOfIncludes:
             partType = findTypeOfPart(self.parts, include)

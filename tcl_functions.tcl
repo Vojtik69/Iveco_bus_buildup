@@ -121,9 +121,9 @@ proc move_include {include x y z} {
 
     *createvector 1 $x $y $z
 
-    *translatemark nodes 1 1 [expr {sqrt($x*$x + $y*$y + $z*$z)}]
-    *translatemark connectors 1 1 [expr {sqrt($x*$x + $y*$y + $z*$z)}]
-
+    set magnitude [expr {sqrt($x*$x + $y*$y + $z*$z)}]
+    *translatemark nodes 1 1 $magnitude
+    *translatemark connectors 1 1 $magnitude
 }
 
 

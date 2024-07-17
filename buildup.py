@@ -118,8 +118,7 @@ class ModelBuildup:
         for label, path, selectedItem, selectedSolver, hierarchy in import_data:
             print(f"Label: {label}, path: {path}")
             if os.path.exists(path):
-                hw.evalTcl(
-                    f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
+                x = y = z = None
                 for label2, path2, selectedItem2, selectedSolver2, hierarchy2 in sortedImportData:
                     if hierarchy2 < hierarchy:
                         compatibilityValue = findCompatibility(self.parts, selectedItem, selectedItem2)
@@ -129,11 +128,17 @@ class ModelBuildup:
                                 print("budeme posouvat")
                                 numbers = re.findall(r'\d+', compatibilityValue)
                                 x, y, z = map(int, numbers)
-                                hw.evalTcl(
-                                    f'source "{paths["tcl"]}"; move_include "{selectedItem}" {x} {y} {z}')
+                                selectedItem = selectedItem + "_moved_" + str(x) + "_" + str(y) + "_" + str(z)
                                 break
                             else:
                                 print("compatibility value is not int and does not contain both brackets [ and ]")
+                hw.evalTcl(
+                        f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
+                print(f"x: {x}, y: {y}, z: {z}")
+                if x or y or z:
+                    print("posouvam")
+                    hw.evalTcl(
+                        f'source "{paths["tcl"]}"; move_include "{selectedItem}" {x} {y} {z}')
             else:
                 print(f"Include file {path} does not exist. Skipping this include.")
 
