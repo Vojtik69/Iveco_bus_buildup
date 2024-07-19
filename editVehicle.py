@@ -82,11 +82,11 @@ class ModelEdit:
                     if os.path.exists(path):
                         hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
                     else:
-                        hw.evalTcl(
-                            f'*createinclude 0 "{part}" "{part}" 0')
+                        hw.evalTcl(f'source "{paths["tcl"]}"; create_include "{part}"')
                         print(f"Include file {path} for {part} does not exist. Creating empty include.")
 
         try:
+            print(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
             hw.evalTcl(
                 f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
         except:
@@ -108,7 +108,7 @@ class ModelEdit:
             print("not able to realize connectors")
 
         self.onCloseModelBuildup(None)
-        gui2.tellUser('Model build-up has finished!')
+        gui2.tellUser('Model edit has finished!')
         self.dialogModelEdit = gui.Dialog(caption="Bus model edit")
 
     def onResetModelBuildup(self, event):

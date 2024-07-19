@@ -218,11 +218,11 @@ def findPathToIncludeFile(partDb, selectedSolver, name):
     return path.replace("\\","/")
 
 def findTypeOfPart(partDb, name):
-    print(f"name: {name}")
+    # print(f"name: {name}")
     if name != "---":
         # Get the level values of the columns
         header_values = partDb.columns.get_level_values(2).tolist()
-        print(f"header_values: {header_values}")
+        # print(f"header_values: {header_values}")
         if name in header_values:
             # Get the index of the header value
             index_of_name = header_values.index(name)
@@ -232,7 +232,7 @@ def findTypeOfPart(partDb, name):
             partType = ""
     else:
         partType = ""
-    print(f"partType: {partType}")
+    # print(f"partType: {partType}")
     return partType
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
@@ -465,7 +465,7 @@ def findCompatibility(df, name2ndColumn, name3rdRow):
 
     # Vyhledání hodnoty z daného sloupce třetího řádku (součást víceúrovňového záhlaví)
     try:
-        print(f"row.xs(name3rdRow, level=2, axis=1):  {row.xs(name3rdRow, level=2, axis=1)}")
+        # print(f"row.xs(name3rdRow, level=2, axis=1):  {row.xs(name3rdRow, level=2, axis=1)}")
         if not row.xs(name3rdRow, level=2, axis=1).empty:
             value = row.xs(name3rdRow, level=2, axis=1).iloc[0,0]
             if pd.isna(value):
@@ -478,7 +478,7 @@ def findCompatibility(df, name2ndColumn, name3rdRow):
         value = int(value)
     except:
         print(f"not possible to make it integer: {value}")
-    print(f"returning value: {value}")
+    # print(f"returning value: {value}")
     return value
 
 def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
@@ -551,9 +551,6 @@ def findLevel(data, targetName, currentLevel=1):
     return None
 
 def moveIncludes(parts):
-    # TODO přidat ještě vehicle specification (teď tam jsou jen načtené includy)
-
-    # Moving of includes
     listOfIncludesIds = hw.evalTcl("hm_getincludes").split()
 
     pattern = r'\{.*?\}|\S+'
@@ -593,7 +590,7 @@ def moveIncludes(parts):
         moved = False
         for id2, label2, hierarchy2, _, _, _ in sortedListofIncludesWithHierarchy:
             compatibilityValue = findCompatibility(parts, label, label2)
-            print(f"compatibilita: {label} + {label2}: {compatibilityValue}")
+            # print(f"compatibilita: {label} + {label2}: {compatibilityValue}")
             if not isinstance(compatibilityValue, int):
                 if '[' in compatibilityValue and ']' in compatibilityValue:
                     print("budeme posouvat")
@@ -606,7 +603,6 @@ def moveIncludes(parts):
                     print(f"x, y, z: {x}, {y}, {z}")
                     if x or y or z:
                         print("posouvam")
-                        # TODO vyhnout se tomu aby název byl _moved_0_0_0
                         print(
                             f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
                         hw.evalTcl(

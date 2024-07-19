@@ -1,13 +1,12 @@
 proc import_data {file_path part_name solver} {
-    set filename [file tail $file_path]
-    *createinclude 0 $part_name $file_path 0
-    *attributeupdatestring cards 1 5015 20 1 0 $part_name
+    set filename [file tail "$file_path"]
+    *createinclude 0 "$part_name" "$file_path" 0
     if {$solver == 2} {
         *createstringarray 13 "OptiStruct " " " "ASSIGNPROP_BYHMCOMMENTS " "CREATE_PART_HIERARCHY" \
           "IMPORT_MATERIAL_METADATA" "ANSA " "PATRAN " "EXPAND_IDS_FOR_FORMULA_SETS " \
           "CONTACTSURF_DISPLAY_SKIP " "LOADCOLS_DISPLAY_SKIP " "SYSTCOLS_DISPLAY_SKIP " \
           "VECTORCOLS_DISPLAY_SKIP " "\[DRIVE_MAPPING= \]"
-        *feinputwithdata2 "\#optistruct\\optistruct" $file_path 0 0 0 0 0 1 13 1 0
+        *feinputwithdata2 "\#optistruct\\optistruct" "$file_path" 0 0 0 0 0 1 13 1 0
     } else {
         *createstringarray 23 "RadiossBlock " "Radioss2023 " "~D01_OPTION 1 " "ASSIGNPROP_BYHMCOMMENTS " \
           "CREATE_PART_HIERARCHY" "IMPORT_MATERIAL_METADATA" "~FE_READ_OPTIMIZATION_FILE 0 " \
@@ -17,7 +16,7 @@ proc import_data {file_path part_name solver} {
           "LOADCOLS_DISPLAY_SKIP" "RIGIDWALLS_DISPLAY_SKIP" "RETRACTORS_DISPLAY_SKIP" \
           "SOLVERMASSES_DISPLAY_SKIP" "SYSTCOLS_DISPLAY_SKIP" "INITIALGEOMETRIES_DISPLAY_SKIP" \
           "SLIPRINGS_DISPLAY_SKIP "
-        *feinputwithdata2 "\#radioss\\radiossblk" $file_path 0 0 0 0 0 1 23 1 0
+        *feinputwithdata2 "\#radioss\\radiossblk" "$file_path" 0 0 0 0 0 1 23 1 0
     }
     *setcurrentinclude 0 ""
 }
@@ -60,7 +59,7 @@ proc relink_connectors {} {
     *createstringarray 5 "ce_spot_extralinknum=0" "ce_seam_extralinknum=0" "ce_spot_non_normal=1" \
       "ce_area_non_normal=0" "ce_preferdifflinksperlayer=0"
     *CE_AddLinkEntitiesWithArrays 1 [expr {$num_elements * 2}] components 2 1 1 1 1 1 $num_elements 0 1 5
-
+    *clearmark connectors 1
 }
 
 proc realize_in_order {what} {
@@ -101,6 +100,41 @@ proc realize_in_order {what} {
         eval *createmark connectors 2 $others
         *CE_Realize 2
     }
+    *clearmark connectors 1
+    *clearmark connectors 2
+}
+
+proc realize_connectors_by_type {id type} {
+    *clearmark connectors 1
+    *createmark connectors 1 "by include" $id
+    if {[hm_marklength connectors 1] < 1} {return}
+    set inputList [hm_ce_datalist 1]
+    set stitch {}
+    set others {}
+
+    foreach item $inputList {
+        set id [lindex $item 0]
+        set config [lindex $item 4]
+        if {$config == "stitch"} {
+            lappend stitch $id
+        } else {
+            lappend others $id
+        }
+    }
+
+    *clearmark connectors 1
+    *clearmark connectors 2
+    if {[llength $stitch] > 0 && [string equal $type "stitch"]} {
+        eval *createmark connectors 1 $stitch
+        *CE_Realize 1
+    }
+    if {[llength $others] > 0 && [string equal $type "others"]} {
+        eval *createmark connectors 2 $others
+        *CE_Realize 2
+    }
+    *clearmark connectors 1
+    *clearmark connectors 2
+
 }
 
 proc realize_connectors {} {
@@ -109,8 +143,17 @@ proc realize_connectors {} {
     *clearmark connectors 1
     *createmark connectors 1 "all"
     *CE_ConnectorRemoveDuplicates 1 0.1
-    realize_in_order "all"
-    *clearmark connectors 1
+
+    set includes [hm_getincludes]
+    foreach include $includes {
+        *setcurrentinclude $include ""
+        realize_connectors_by_type $include "stitch"
+    }
+    foreach include $includes {
+        *setcurrentinclude $include ""
+        realize_connectors_by_type $include "others"
+    }
+
     equivalence
     *modelcheck_applyautocorrection Multiple Rigids or RBE3s sharing nodes ALL ALL 0
 }
@@ -119,6 +162,7 @@ proc unrealize_connectors {} {
     *clearmark connectors 1
     *createmark connectors 1 all
     *CE_Unrealize 1
+    *clearmark connectors 1
 }
 
 proc move_include {new_name id x y z} {
@@ -135,10 +179,14 @@ proc move_include {new_name id x y z} {
         *translatemark connectors 1 1 $magnitude
         }
 
-    *updateinclude $id 1 $new_name 0 0 0 0
+    *updateinclude $id 1 "$new_name" 0 0 0 0
+    *clearmark nodes 1
+    *clearmark connectors 1
 }
 
-
+proc create_include {name} {
+    *createinclude 0 "$name" "$name" 0
+}
 
 
 #======position ======
