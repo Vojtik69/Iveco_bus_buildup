@@ -220,18 +220,20 @@ def findPathToIncludeFile(partDb, selectedSolver, name):
 def findTypeOfPart(partDb, name):
     print(f"name: {name}")
     if name != "---":
-        matching_parts = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(0).tolist()
-        # print(f"matching_parts: {matching_parts}")
-        # print(f"type: {type(matching_parts[0])}")
-        if matching_parts and isinstance(matching_parts[0], str):
-            partType = matching_parts[0]
+        # Get the level values of the columns
+        header_values = partDb.columns.get_level_values(2).tolist()
+        print(f"header_values: {header_values}")
+        if name in header_values:
+            # Get the index of the header value
+            index_of_name = header_values.index(name)
+            # Get the corresponding value from the 0th level of multi-header
+            partType = partDb.columns.get_level_values(1)[index_of_name]
         else:
             partType = ""
     else:
         partType = ""
-    # print(f"Path: {partType}")
+    print(f"partType: {partType}")
     return partType
-
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
     # print_caller_info()
@@ -532,6 +534,8 @@ def getSelectedSolver():
 
 
 def findLevel(data, targetName, currentLevel=1):
+    # print(f"data: {data} , type: {type(data)}")
+    # print(f"targetName: {targetName}")
     if isinstance(data, list):
         for item in data:
             result = findLevel(item, targetName, currentLevel)
@@ -545,6 +549,75 @@ def findLevel(data, targetName, currentLevel=1):
             if result is not None:
                 return result
     return None
+
+def moveIncludes(parts):
+    # TODO přidat ještě vehicle specification (teď tam jsou jen načtené includy)
+
+    # Moving of includes
+    listOfIncludesIds = hw.evalTcl("hm_getincludes").split()
+
+    pattern = r'\{.*?\}|\S+'
+    matches = re.findall(pattern, hw.evalTcl("hm_getincludes -byshortname"))
+    listOfIncludesLablesOriginal = [match.strip('{}') for match in matches]
+
+    # remove ends of names in cases the include is moved and the name is ended by suffix _move_x_y_z
+    listOfIncludesLables = []
+    moved_data = []
+
+    for item in listOfIncludesLablesOriginal:
+        if '_moved' in item:
+            base_label, moved_part = item.split('_moved', 1)
+            coords = moved_part.split('_')[1:]  # Extract x, y, z
+            x, y, z = map(int, coords)
+            listOfIncludesLables.append(base_label)
+            moved_data.append((x, y, z))
+        else:
+            listOfIncludesLables.append(item)
+            moved_data.append((0, 0, 0))  # No move data
+
+    listofIncludesWithHierarchy = []
+
+    print(f'listOfIncludesLables: {listOfIncludesLables}')
+
+    for i, label in enumerate(listOfIncludesLables):
+        hierarchy = findLevel(hierarchyOfTypes, findTypeOfPart(parts, label))
+        id = listOfIncludesIds[i]
+        x, y, z = moved_data[i]
+        listofIncludesWithHierarchy.append((id, label, hierarchy, x, y, z))
+
+    print(f'listofIncludesWithHierarchy: {listofIncludesWithHierarchy}')
+
+    sortedListofIncludesWithHierarchy = sorted(listofIncludesWithHierarchy, key=lambda x: x[2], reverse=True)
+
+    for i, (id, label, hierarchy, x_orig, y_orig, z_orig) in enumerate(sortedListofIncludesWithHierarchy):
+        moved = False
+        for id2, label2, hierarchy2, _, _, _ in sortedListofIncludesWithHierarchy:
+            compatibilityValue = findCompatibility(parts, label, label2)
+            print(f"compatibilita: {label} + {label2}: {compatibilityValue}")
+            if not isinstance(compatibilityValue, int):
+                if '[' in compatibilityValue and ']' in compatibilityValue:
+                    print("budeme posouvat")
+                    numbers = re.findall(r'\d+', compatibilityValue)
+                    x, y, z = map(int, numbers)
+                    new_label = label + "_moved_" + str(x) + "_" + str(y) + "_" + str(z)
+                    x = x - x_orig
+                    y = y - y_orig
+                    z = z - z_orig
+                    print(f"x, y, z: {x}, {y}, {z}")
+                    if x or y or z:
+                        print("posouvam")
+                        # TODO vyhnout se tomu aby název byl _moved_0_0_0
+                        print(
+                            f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
+                        hw.evalTcl(
+                            f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
+                        moved = True
+                        break
+                else:
+                    print("compatibility value is not int and does not contain both brackets [ and ]")
+        if not moved and (x_orig or y_orig or z_orig):
+            hw.evalTcl(
+                f'source "{paths["tcl"]}"; move_include "{label}" {id} {-x_orig} {-y_orig} {-z_orig}')
 
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 

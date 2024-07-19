@@ -115,15 +115,27 @@ proc realize_connectors {} {
     *modelcheck_applyautocorrection Multiple Rigids or RBE3s sharing nodes ALL ALL 0
 }
 
-proc move_include {include x y z} {
-    *createmark nodes 1 "by include shortname" $include
-    *createmark connectors 1 "by include shortname" $include
+proc unrealize_connectors {} {
+    *clearmark connectors 1
+    *createmark connectors 1 all
+    *CE_Unrealize 1
+}
+
+proc move_include {new_name id x y z} {
+    *createmark nodes 1 "by include" $id
+    *createmark connectors 1 "by include" $id
 
     *createvector 1 $x $y $z
 
     set magnitude [expr {sqrt($x*$x + $y*$y + $z*$z)}]
-    *translatemark nodes 1 1 $magnitude
-    *translatemark connectors 1 1 $magnitude
+    if {[hm_marklength nodes 1] > 0} {
+        *translatemark nodes 1 1 $magnitude
+        }
+    if {[hm_marklength connectors 1] > 0} {
+        *translatemark connectors 1 1 $magnitude
+        }
+
+    *updateinclude $id 1 $new_name 0 0 0 0
 }
 
 

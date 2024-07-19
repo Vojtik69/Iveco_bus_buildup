@@ -9,10 +9,12 @@ from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
 from hwx import gui as gui2
+import re
 
-from common import findPathToIncludeFile, getWidgetStructure, \
+from common import (findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
-    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface
+    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface,
+    moveIncludes)
 
 class ModelEdit:
     def __init__(self):
@@ -33,7 +35,18 @@ class ModelEdit:
     def onEditModel(self, event):
         self.selectedSolver = getSelectedSolver()
 
-        listOfIncludes = hw.evalTcl("hm_getincludes -byshortname").split()
+        pattern = r'\{.*?\}|\S+'
+        matches = re.findall(pattern, hw.evalTcl("hm_getincludes -byshortname"))
+        listOfIncludesLablesOriginal = [match.strip('{}') for match in matches]
+
+        listOfIncludes = []
+        for item in listOfIncludesLablesOriginal:
+            if '_moved' in item:
+                base_label, moved_part = item.split('_moved', 1)
+                listOfIncludes.append(base_label)
+            else:
+                listOfIncludes.append(item)
+
         print(f"listOfIncludes: {listOfIncludes}")
         listOfIncludesIds = hw.evalTcl("hm_getincludes").split()
         partTypes = []
@@ -41,7 +54,7 @@ class ModelEdit:
             partType = findTypeOfPart(self.parts, include)
             if partType:
                 partTypes.append(partType)
-
+        print(f"partTypes: {partTypes}")
         data = []
         for label, widget in self.widgetyModelEdit.items():
             print(f"label: {label}")
@@ -62,25 +75,31 @@ class ModelEdit:
                     index = listOfIncludes.index(part)
                     del listOfIncludesIds[index]
                     listOfIncludes.remove(part)
-                    #     TODO: is it possible to move it, according to new parts?
-                    #     TODO: recognise if already moved
                 else:
                     path = findPathToIncludeFile(self.parts, self.selectedSolver, part)
                     print(f"part: {part}")
                     print(f"path: {path}")
                     if os.path.exists(path):
                         hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
-                        # TODO: Move part when changing part
-
                     else:
-                        print(f"Include file {path} does not exist. Skipping this include.")
-        hw.evalTcl('*end_batch_import')
+                        hw.evalTcl(
+                            f'*createinclude 0 "{part}" "{part}" 0')
+                        print(f"Include file {path} for {part} does not exist. Creating empty include.")
 
         try:
             hw.evalTcl(
                 f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
         except:
             print("Unable to delete rest of includes")
+
+        try:
+            hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
+        except:
+            print("not able to unrealize connectors")
+
+        moveIncludes(self.parts)
+
+        hw.evalTcl('*end_batch_import')
 
         print("realizing connectors")
         try:
@@ -100,12 +119,14 @@ class ModelEdit:
         self.selectedSolver = getSelectedSolver()
         print(f"selectedSolver: {self.selectedSolver}")
 
-        listOfIncludes = hw.evalTcl("hm_getincludes -byshortname").split()
+        pattern = r'\{.*?\}|\S+'
+        matches = re.findall(pattern, hw.evalTcl("hm_getincludes -byshortname"))
+        listOfIncludesLablesOriginal = [match.strip('{}') for match in matches]
 
         # remove ends of names in cases the include is moved and the name is ende by suffix _move_x_y_z
         listOfIncludes = [
             item[:item.find('_moved')] if item.find('_moved') != -1 else item
-            for item in listOfIncludes
+            for item in listOfIncludesLablesOriginal
         ]
 
         partTypes = []
