@@ -166,18 +166,20 @@ proc unrealize_connectors {} {
 }
 
 proc move_include {new_name id x y z} {
-    *createmark nodes 1 "by include" $id
-    *createmark connectors 1 "by include" $id
+    if { $x != 0 || $y != 0 || $z != 0 } {
+        *createmark nodes 1 "by include" $id
+        *createmark connectors 1 "by include" $id
 
-    *createvector 1 $x $y $z
+        *createvector 1 $x $y $z
 
-    set magnitude [expr {sqrt($x*$x + $y*$y + $z*$z)}]
-    if {[hm_marklength nodes 1] > 0} {
-        *translatemark nodes 1 1 $magnitude
-        }
-    if {[hm_marklength connectors 1] > 0} {
-        *translatemark connectors 1 1 $magnitude
-        }
+        set magnitude [expr {sqrt($x*$x + $y*$y + $z*$z)}]
+        if {[hm_marklength nodes 1] > 0} {
+            *translatemark nodes 1 1 $magnitude
+            }
+        if {[hm_marklength connectors 1] > 0} {
+            *translatemark connectors 1 1 $magnitude
+            }
+    }
 
     *updateinclude $id 1 "$new_name" 0 0 0 0
     *clearmark nodes 1

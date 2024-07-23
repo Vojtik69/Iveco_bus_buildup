@@ -176,6 +176,7 @@ def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, nam
     for subordinant in subordinants:
         # if it is multiselection ListBox
         if isinstance(widgetyBuildup[f'vyber_{subordinant}'], gui2.ListBox):
+            print(f"{subordinant} - multiselection ListBox")
             # save selected
             items = widgetyBuildup["vyber_" + subordinant].items
             selectedIndexes = widgetyBuildup["vyber_" + subordinant].selectedIndexes
@@ -196,7 +197,8 @@ def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, nam
 
         # if it is onlyselection Combo
         else:
-            pass
+            print(f"{subordinant} - onlyselection Combo")
+            print(f"compatibleParts returned: {findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False)}")
             widgetyBuildup["vyber_" + subordinant].setValues(
                 findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False))
 
@@ -241,10 +243,11 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
     superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
     print("find compatibles")
+    print(f"removeEmpty: {removeEmpty}")
     # print(f"selectedSolver: {selectedSolver}")
     for part in allOfType:
         compatible = True
-        # print(f"part: {part}")
+        print(f"part: {part}")
         #if the part has not file for current solver, go next
         if pd.isna(parts[parts.index.get_level_values(1) == part].index.get_level_values(selectedSolver)):
             # print("not compatible")
@@ -252,11 +255,15 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
         for superordinantType in superordinantTypes:
             # print(f"superordinant type: {superordinantType}")
             # print(f"widgetyBuildup[f'vyber_{superordinantType}'].get() = {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
-            if widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
+            if widgetyBuildup[f'vyber_{superordinantType}'].get() and widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
                 # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0])
                 # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())])
                 # print(widgetyBuildup[f'vyber_{superordinantType}'].get())
-                # print(f"value: {parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]}")
+                print(
+                    f"value: parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]")
+                print(
+                    f"widgetyBuildup[f'vyber_superordinantType'].get())]: {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
+                print(f"value: {parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]}")
                 value = parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]
                 if pd.isna(value) or value == 0:
                     compatible = False
@@ -264,8 +271,10 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
                     break
         if compatible:
             compatibles.append(part)
-    # print(f"compatibles: {sortAlphabetically(compatibles)}")
-    return sortAlphabetically(compatibles)
+    sortedCompatibles = sortAlphabetically(compatibles)
+    print(f"compatibles: {sortedCompatibles}")
+    return sortedCompatibles
+
 
 
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
@@ -459,6 +468,7 @@ def findAllParts(parts):
 
 
 def findCompatibility(df, name2ndColumn, name3rdRow):
+    # print(f"name2ndColumn, name3rdRow: {name2ndColumn}, {name3rdRow}")
     # Vyhledání řádku na základě názvu ve druhém sloupci (2. úroveň multiindexu)
     idx = df.index.get_level_values(1) == name2ndColumn
     row = df[idx]
@@ -579,41 +589,52 @@ def moveIncludes(parts):
     for i, label in enumerate(listOfIncludesLables):
         hierarchy = findLevel(hierarchyOfTypes, findTypeOfPart(parts, label))
         id = listOfIncludesIds[i]
+        labelOriginal = listOfIncludesLablesOriginal[i]
         x, y, z = moved_data[i]
-        listofIncludesWithHierarchy.append((id, label, hierarchy, x, y, z))
+        listofIncludesWithHierarchy.append((id, label, labelOriginal, hierarchy, x, y, z))
 
     print(f'listofIncludesWithHierarchy: {listofIncludesWithHierarchy}')
 
-    sortedListofIncludesWithHierarchy = sorted(listofIncludesWithHierarchy, key=lambda x: x[2], reverse=True)
+    sortedListofIncludesWithHierarchy = sorted(listofIncludesWithHierarchy, key=lambda x: x[3], reverse=True)
 
-    for i, (id, label, hierarchy, x_orig, y_orig, z_orig) in enumerate(sortedListofIncludesWithHierarchy):
-        moved = False
-        for id2, label2, hierarchy2, _, _, _ in sortedListofIncludesWithHierarchy:
+    for i, (id, label, labelOriginal, hierarchy, x_orig, y_orig, z_orig) in enumerate(sortedListofIncludesWithHierarchy):
+        print(f"Going to move {label}?")
+        moving_finished = False
+        for id2, label2, labelOriginal2, hierarchy2, _, _, _ in sortedListofIncludesWithHierarchy:
             compatibilityValue = findCompatibility(parts, label, label2)
             # print(f"compatibilita: {label} + {label2}: {compatibilityValue}")
             if not isinstance(compatibilityValue, int):
                 if '[' in compatibilityValue and ']' in compatibilityValue:
-                    print("budeme posouvat")
-                    numbers = re.findall(r'\d+', compatibilityValue)
+                    print(f"going to move: {label} - {label2}: {compatibilityValue}")
+                    numbers = re.findall(r'-?\d+', compatibilityValue)
                     x, y, z = map(int, numbers)
+                    print(f"_moved x, y, z: {x_orig}, {y_orig}, {z_orig}")
+                    print(f"compatibility x, y, z: {x}, {y}, {z}")
                     new_label = label + "_moved_" + str(x) + "_" + str(y) + "_" + str(z)
                     x = x - x_orig
                     y = y - y_orig
                     z = z - z_orig
                     print(f"x, y, z: {x}, {y}, {z}")
+                    moving_finished = True
                     if x or y or z:
-                        print("posouvam")
+                        print("moving")
                         print(
                             f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
                         hw.evalTcl(
                             f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
-                        moved = True
                         break
                 else:
                     print("compatibility value is not int and does not contain both brackets [ and ]")
-        if not moved and (x_orig or y_orig or z_orig):
+        if not moving_finished:
+            print(f"{label}: not found moving coordinates - moving back to initial position")
+            print(
+                f'source "{paths["tcl"]}"; move_include "{label}" {id} {-x_orig} {-y_orig} {-z_orig}')
             hw.evalTcl(
                 f'source "{paths["tcl"]}"; move_include "{label}" {id} {-x_orig} {-y_orig} {-z_orig}')
+        else:
+            print(f"{label}: doing nothing")
+
+
 
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 

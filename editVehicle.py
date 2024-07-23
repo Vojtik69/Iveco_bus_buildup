@@ -14,7 +14,7 @@ import re
 from common import (findPathToIncludeFile, getWidgetStructure, \
     getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface,
-    moveIncludes)
+    moveIncludes, updateSubordinantItems)
 
 class ModelEdit:
     def __init__(self):
@@ -68,36 +68,42 @@ class ModelEdit:
                 selectedValue = widget.value
                 data.append(selectedValue)
         print(f"data: {data}")
-        hw.evalTcl('*start_batch_import 2')
-        for part in data:
-            if part != "---":
-                if part in listOfIncludes:
-                    index = listOfIncludes.index(part)
-                    del listOfIncludesIds[index]
-                    listOfIncludes.remove(part)
-                else:
-                    path = findPathToIncludeFile(self.parts, self.selectedSolver, part)
-                    print(f"part: {part}")
-                    print(f"path: {path}")
-                    if os.path.exists(path):
-                        hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
+        # to be safe, we will end batch import if it was not terminated earlier
+        hw.evalTcl('*end_batch_import')
+        try:
+            hw.evalTcl('*start_batch_import 2')
+            for part in data:
+                if part != "---":
+                    if part in listOfIncludes:
+                        index = listOfIncludes.index(part)
+                        del listOfIncludesIds[index]
+                        listOfIncludes.remove(part)
                     else:
-                        hw.evalTcl(f'source "{paths["tcl"]}"; create_include "{part}"')
-                        print(f"Include file {path} for {part} does not exist. Creating empty include.")
+                        path = findPathToIncludeFile(self.parts, self.selectedSolver, part)
+                        print(f"part: {part}")
+                        print(f"path: {path}")
+                        if os.path.exists(path):
+                            hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
+                        else:
+                            hw.evalTcl(f'source "{paths["tcl"]}"; create_include "{part}"')
+                            print(f"Include file {path} for {part} does not exist. Creating empty include.")
 
-        try:
-            print(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
-            hw.evalTcl(
-                f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
-        except:
-            print("Unable to delete rest of includes")
+            try:
+                hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
+            except:
+                print("not able to unrealize connectors")
 
-        try:
-            hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
-        except:
-            print("not able to unrealize connectors")
+            try:
+                print(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+                hw.evalTcl(
+                    f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+            except:
+                print("Unable to delete rest of includes")
 
-        moveIncludes(self.parts)
+            moveIncludes(self.parts)
+
+        except Exception as e:
+            print(f"Error in batch import: {e}")
 
         hw.evalTcl('*end_batch_import')
 
@@ -156,6 +162,7 @@ class ModelEdit:
                 elif isinstance(widget, gui2.ComboBox):
                     print("ComboBox")
                     widget.value = includeName
+                updateSubordinantItems(hierarchyOfTypes, self.parts, self.widgetyModelEdit, self.selectedSolver, partType)
             except:
                 print("Error in selecting parts in ComboBox or Listbox")
                 pass

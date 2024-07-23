@@ -81,52 +81,56 @@ class ModelBuildup:
 
         hw.evalTcl(
             f'source "{paths["tcl"]}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[self.selectedSolver - 2]} changing_interface_finished; vwait change_finished')
-        hw.evalTcl(f'*start_batch_import 2')
+        # to be safe, we will end batch import if it was not terminated earlier
+        hw.evalTcl('*end_batch_import')
+        try:
+            hw.evalTcl(f'*start_batch_import 2')
 
-        # Příprava potřebných dat
-        import_data = []
+            # Příprava potřebných dat
+            import_data = []
 
-        for label, widget in self.widgetyBuildup.items():
-            label = label.replace('vyber_', '')
-            if isinstance(widget, gui2.ListBox):
-                items = widget.items
-                selectedIndexes = widget.selectedIndexes
-                selectedItems = [items[index] for index in selectedIndexes] if selectedIndexes else []
+            for label, widget in self.widgetyBuildup.items():
+                label = label.replace('vyber_', '')
+                if isinstance(widget, gui2.ListBox):
+                    items = widget.items
+                    selectedIndexes = widget.selectedIndexes
+                    selectedItems = [items[index] for index in selectedIndexes] if selectedIndexes else []
 
-                for selectedItem in selectedItems:
-                    if selectedItem != "---":
-                        path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedItem)
+                    for selectedItem in selectedItems:
+                        if selectedItem != "---":
+                            path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedItem)
+                            hierarchy = findLevel(hierarchyOfTypes, label)
+                            import_data.append((label, path, selectedItem, self.selectedSolver, hierarchy))
+                        else:
+                            print(f"selectedItem: {selectedItem}")
+
+                elif isinstance(widget, gui2.ComboBox):
+                    selectedValue = widget.value
+                    if selectedValue != "---":
+                        path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedValue)
                         hierarchy = findLevel(hierarchyOfTypes, label)
-                        import_data.append((label, path, selectedItem, self.selectedSolver, hierarchy))
+                        import_data.append((label, path, selectedValue, self.selectedSolver, hierarchy))
                     else:
-                        print(f"selectedItem: {selectedItem}")
+                        print(f"selectedItem: {selectedValue}")
 
-            elif isinstance(widget, gui2.ComboBox):
-                selectedValue = widget.value
-                if selectedValue != "---":
-                    path = findPathToIncludeFile(self.parts, self.selectedSolver, selectedValue)
-                    hierarchy = findLevel(hierarchyOfTypes, label)
-                    import_data.append((label, path, selectedValue, self.selectedSolver, hierarchy))
+            print(import_data)
+            sortedImportData = sorted(import_data, key=lambda x: x[4], reverse=True)
+            print(sortedImportData)
+
+            # Realizace loop a příkazů na připravených datech
+            for label, path, selectedItem, selectedSolver, hierarchy in import_data:
+                print(f"Label: {label}, path: {path}")
+                if os.path.exists(path):
+                    hw.evalTcl(
+                            f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
                 else:
-                    print(f"selectedItem: {selectedValue}")
+                    hw.evalTcl(
+                        f'*createinclude 0 "{selectedItem}" "{selectedItem}" 0')
+                    print(f"Include file {path} for {selectedItem} does not exist. Creating empty include.")
 
-        print(import_data)
-        sortedImportData = sorted(import_data, key=lambda x: x[4], reverse=True)
-        print(sortedImportData)
-
-        # Realizace loop a příkazů na připravených datech
-        for label, path, selectedItem, selectedSolver, hierarchy in import_data:
-            print(f"Label: {label}, path: {path}")
-            if os.path.exists(path):
-                hw.evalTcl(
-                        f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
-            else:
-                hw.evalTcl(
-                    f'*createinclude 0 "{selectedItem}" "{selectedItem}" 0')
-                print(f"Include file {path} for {selectedItem} does not exist. Creating empty include.")
-
-        moveIncludes(self.parts)
-
+            moveIncludes(self.parts)
+        except Exception as e:
+            print(f"Error in batch import: {e}")
         print("ending batch import")
         hw.evalTcl(f'puts "Going to end batch import"')
         hw.evalTcl(f'*end_batch_import')
