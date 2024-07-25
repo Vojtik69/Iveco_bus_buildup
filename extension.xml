@@ -8,7 +8,7 @@
 	<entry name="author"			value="Advanced Engineering s.r.o." />
 	<entry name="description"		value="Extension helps to build customized complete model from partial includes." />
 	<entry name="supportedClient"	value="HyperWorksDesktop" />
-	<entry name="documentation"		value="documentation/ExtensionDemo.htm" />
+	<entry name="documentation"		value="documentation/documentation.pdf" />
 	
 	<section name="profile" value="HyperMesh">
 		<entry name="ribbonxml"		value="hm/hm-ribbon.xml" />

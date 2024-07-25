@@ -1,5 +1,10 @@
 import os
-import os
+import sys
+# Získání cesty k aktuálně běžícímu skriptu
+currentDir = os.path.dirname(os.path.realpath(__file__))
+print(f"dirname: {currentDir}")
+# Přidání této cesty do sys.path
+sys.path.append(currentDir)
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -14,11 +19,11 @@ import traceback
 
 print("loading common.py")
 
-paths = {
-    "csv"           : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/compatibility.csv",
-    "hierarchy"     : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/types_hierarchy.yaml",
-    "tcl"           : "N:/01_DATA/01_PROJECTS/103_Iveco_Model_Buildup/01_data/01_python/tcl_functions.tcl"
-}
+# load config file
+with open(f'{currentDir}\config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+config['paths']['tcl'] = (currentDir + r'\tcl_functions.tcl').replace("\\", "/")
+paths = config['paths']
 
 def print_caller_info():
     stack_trace = traceback.extract_stack()

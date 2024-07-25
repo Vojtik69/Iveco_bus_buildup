@@ -253,7 +253,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         addNew = gui.Button('Add as new', command=lambda event: addPartToDB(event, parts, partInfo))
     elif initiator.caption == "Add Part":
         confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts, partInfo))
-        addNew = None
+        addNew = "<->"
 
     sepVertical = gui.Separator(orientation='vertical', spacing='20')
     sepHorizontal1 = gui.Separator(orientation='horizontal', spacing='2')
@@ -269,7 +269,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     labelFrame = gui.HFrame(label_partName, label_partType, label_os, label_radioss, "<->")
 
     parentsAndSubordinatesFrame = gui.HFrame(parentsFrame, sepVertical, subordinatesFrame)
-    compatibilityGuiFrame = gui.VFrame(labelFrame, sepHorizontal1, VehicleSpecFrame, sepHorizontal2, parentsAndSubordinatesFrame, (800, confirm,5, addNew, 5, cancel))
+    compatibilityGuiFrame = gui.VFrame(labelFrame, sepHorizontal1, VehicleSpecFrame, sepHorizontal2, parentsAndSubordinatesFrame, (800, confirm, 5, addNew, 5, cancel))
 
     dialogSetCompatibility.recess().add(compatibilityGuiFrame)
 

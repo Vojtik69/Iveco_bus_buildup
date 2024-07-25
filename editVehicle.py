@@ -12,9 +12,8 @@ from hwx import gui as gui2
 import re
 
 from common import (findPathToIncludeFile, getWidgetStructure, \
-    getWidgetVehicleSpecStructure, resetModelEdit, importParts, hierarchyOfTypes, paths, \
-    findCompatibleParts, findAllOfType, getValuesForVehicleSpec, findTypeOfPart, getSelectedSolver, solverInterface,
-    moveIncludes, updateSubordinantItems)
+    getWidgetVehicleSpecStructure, importParts, hierarchyOfTypes, paths, \
+    findTypeOfPart, getSelectedSolver, moveIncludes, updateSubordinantItems, loadSetup, saveSetup)
 
 class ModelEdit:
     def __init__(self):
@@ -172,6 +171,10 @@ class ModelEdit:
         buildup = gui.Button('Edit model', command=lambda event: self.onEditModel(event))
         reset = gui.Button('Reset', command=self.onResetModelBuildup)
 
+        load = gui.Button('Load setup',
+                          command=lambda event: loadSetup(event, self.widgetyModelEdit, self.selectedSolver, self.parts))
+        save = gui.Button('Save setup', command=lambda event: saveSetup(event, self.widgetyModelEdit))
+
         vehicleSpecFrame = gui.HFrame(
             getWidgetVehicleSpecStructure(hierarchyOfTypes["groups"]["vehicle_spec"], hierarchyOfTypes, self.parts,
                                           self.widgetyModelEdit, self.selectedSolver), container=True, maxwidth=500)
@@ -186,6 +189,8 @@ class ModelEdit:
         widgetFrame.maxheight = widgetFrame.reqheight
 
         mainFrame = gui.VFrame(
+            ("<->", load, save),
+            15,
             vehicleSpecFrame,
             15,
             widgetFrame,

@@ -6,9 +6,11 @@
         <action tag="Edit" text="Edit Part" tooltip="Edit existing Part in database" image="editPart.png" command="py: $EXTENSION_DIR.editPart.mainFunc()"/>
     </actionlist>
 	<page tag="Iveco_Custom_Build" text="Iveco Custom Build">
-        <group tag="OpenWizard_menu" text="">
+        <group tag="Model_menu" text="Model">
 			<action actiontag="BuildUp"/>
             <action actiontag="EditVehicle"/>
+        </group>
+        <group tag="Database_menu" text="Database">
             <action actiontag="Add"/>
             <action actiontag="Edit"/>
         </group>
