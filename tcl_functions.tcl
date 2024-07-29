@@ -34,13 +34,55 @@ proc equivalence {} {
 proc relink_connectors {} {
     *clearmark connectors 1
     *createmark connectors 1 "all"
+    if {[hm_marklength connectors 1] < 1} {return}
     set inputList [hm_ce_datalist 1]
+    set for_components {}
+    set for_nodes {}
+
+    foreach item $inputList {
+        set id [lindex $item 0]
+        set config [lindex $item 4]
+        if {$config == "spring"} {
+            lappend for_nodes $id
+        } else {
+            lappend for_components $id
+        }
+    }
+
+    #### FOR_NODES
 
     set createarrayCmd "*createarray"
-    set num_elements [llength $inputList]
+    set num_elements [llength $for_nodes]
     # Append the count of elements in inputList multiplied by 2 (each ID followed by -1)
     append createarrayCmd " [expr {$num_elements * 2}]"
-    foreach item $inputList {
+    foreach item $for_nodes {
+        set id [lindex $item 0]
+        append createarrayCmd " $id -1"
+    }
+    eval $createarrayCmd
+
+    *createmark nodes 2 "displayed"
+
+    set createdoublearrayCmd "*createdoublearray $num_elements"
+    # Append the required number of zeros
+    for {set i 0} {$i < $num_elements} {incr i} {
+        append createdoublearrayCmd " 0"
+    }
+    # Evaluate the final command
+    eval $createdoublearrayCmd
+
+    *createstringarray 5 "ce_spot_extralinknum=0" "ce_seam_extralinknum=0" "ce_spot_non_normal=0" \
+      "ce_area_non_normal=0" "ce_preferdifflinksperlayer=0"
+    *CE_AddLinkEntitiesWithArrays 1 [expr {$num_elements * 2}] nodes 2 1 1 1 1 1 $num_elements 0 1 5
+    *clearmark connectors 1
+
+    #### FOR_COMPONENTS
+
+    set createarrayCmd "*createarray"
+    set num_elements [llength $for_components]
+    # Append the count of elements in inputList multiplied by 2 (each ID followed by -1)
+    append createarrayCmd " [expr {$num_elements * 2}]"
+    foreach item $for_components {
         set id [lindex $item 0]
         append createarrayCmd " $id -1"
     }
