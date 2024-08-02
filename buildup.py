@@ -1,10 +1,10 @@
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 import re
 from hw import *
 from hw.hv import *
@@ -29,15 +29,15 @@ class ModelBuildup:
         self.selectedSolver = getSelectedSolver()
         self.columnWidth = 230
 
-        print("Initiating...")
+        logger.debug("Initiating...")
 
     def solverChange(self, event):
         self.selectedSolver = event.widget.value
-        print(f"solverChange() selectedSolver: {self.selectedSolver}")
+        logger.debug(f"solverChange() selectedSolver: {self.selectedSolver}")
 
         for label, widget in self.widgetyBuildup.items():
-            print(f"label: {label}")
-            print(f"widget: {widget}")
+            logger.debug(f"label: {label}")
+            logger.debug(f"widget: {widget}")
 
             if isinstance(widget, gui2.ListBox):
                 items = widget.items
@@ -51,8 +51,8 @@ class ModelBuildup:
 
                 for index, item in enumerate(widget.items):
                     if item in selectedItems:
-                        print(f"selected items: {selectedItems}")
-                        print(f"index: {index}, {item}")
+                        logger.debug(f"selected items: {selectedItems}")
+                        logger.debug(f"index: {index}, {item}")
                         widget.select(index)
 
             elif isinstance(widget, gui2.ComboBox):
@@ -63,7 +63,7 @@ class ModelBuildup:
                     values = findAllOfType(self.parts, self.selectedSolver, label.replace("vyber_", ""),
                                            removeEmpty=False)
 
-                print(f"all values: {values}")
+                logger.debug(f"all values: {values}")
                 print_caller_info()
                 widget.setValues(values)
                 try:
@@ -75,9 +75,9 @@ class ModelBuildup:
         self.dialogModelBuildup.hide()
 
     def onBuildUpModelBuildup(self, event):
-        print(f"BuildUp")
-        print(f"selectedSolver: {self.selectedSolver}")
-        print(f"solverInterface: {solverInterface[self.selectedSolver - 2]}")
+        logger.debug(f"BuildUp")
+        logger.debug(f"selectedSolver: {self.selectedSolver}")
+        logger.debug(f"solverInterface: {solverInterface[self.selectedSolver - 2]}")
 
         hw.evalTcl(
             f'source "{paths["tcl"]}"; set change_finished false; ::UserProfiles::LoadUserProfile {solverInterface[self.selectedSolver - 2]} changing_interface_finished; vwait change_finished')
@@ -102,7 +102,7 @@ class ModelBuildup:
                             hierarchy = findLevel(hierarchyOfTypes, label)
                             import_data.append((label, path, selectedItem, self.selectedSolver, hierarchy))
                         else:
-                            print(f"selectedItem: {selectedItem}")
+                            logger.debug(f"selectedItem: {selectedItem}")
 
                 elif isinstance(widget, gui2.ComboBox):
                     selectedValue = widget.value
@@ -111,34 +111,34 @@ class ModelBuildup:
                         hierarchy = findLevel(hierarchyOfTypes, label)
                         import_data.append((label, path, selectedValue, self.selectedSolver, hierarchy))
                     else:
-                        print(f"selectedItem: {selectedValue}")
+                        logger.debug(f"selectedItem: {selectedValue}")
 
-            print(import_data)
+            logger.debug(import_data)
             sortedImportData = sorted(import_data, key=lambda x: x[4], reverse=True)
-            print(sortedImportData)
+            logger.debug(sortedImportData)
 
             # Realizace loop a příkazů na připravených datech
             for label, path, selectedItem, selectedSolver, hierarchy in import_data:
-                print(f"Label: {label}, path: {path}")
+                logger.debug(f"Label: {label}, path: {path}")
                 if os.path.exists(path):
                     hw.evalTcl(
                             f'source "{paths["tcl"]}"; import_data "{path}" "{selectedItem}" "{selectedSolver}"')
                 else:
                     hw.evalTcl(
                         f'*createinclude 0 "{selectedItem}" "{selectedItem}" 0')
-                    print(f"Include file {path} for {selectedItem} does not exist. Creating empty include.")
+                    logger.debug(f"Include file {path} for {selectedItem} does not exist. Creating empty include.")
 
             moveIncludes(self.parts)
         except Exception as e:
-            print(f"Error in batch import: {e}")
-        print("ending batch import")
+            logger.debug(f"Error in batch import: {e}")
+        logger.debug("ending batch import")
         hw.evalTcl(f'puts "Going to end batch import"')
         hw.evalTcl(f'*end_batch_import')
-        print("realizing connectors")
+        logger.debug("realizing connectors")
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
-            print("not able to realize connectors")
+            logger.debug("not able to realize connectors")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
@@ -194,7 +194,7 @@ def mainFunc(*args, **kwargs):
     model_buildup = ModelBuildup()
     width, height = model_buildup.modelBuildupGui()
     model_buildup.dialogModelBuildup.show(width=width, height=height)
-    print("Initiated...")
+    logger.debug("Initiated...")
 
 if __name__ == "__main__":
     mainFunc()

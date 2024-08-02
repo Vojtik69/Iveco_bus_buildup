@@ -1,10 +1,10 @@
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 import pandas as pd
 from hw import *
 from hw.hv import *
@@ -167,7 +167,7 @@ def mainFunc(*args, **kwargs):
     parts = importParts()
     dialogEditPart = DialogEditPart()
     dialogEditPart.show()
-    print("Initiated EditPart...")
+    logger.debug("Initiated EditPart...")
 
 if __name__ == "__main__":
     mainFunc()

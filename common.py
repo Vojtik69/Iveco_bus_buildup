@@ -1,10 +1,10 @@
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -17,7 +17,7 @@ import os
 import re
 import traceback
 
-print("loading common.py")
+logger.debug("loading common.py")
 
 # load config file
 with open(f'{currentDir}\config.yaml', 'r') as file:
@@ -30,7 +30,7 @@ def print_caller_info():
     caller_name = stack_trace[-3].name
     caller_file = os.path.basename(stack_trace[-3].filename)
     caller_line = stack_trace[-3].lineno
-    print(f"Voláno funkcí {caller_name} ze souboru: {caller_file}, na řádku: {caller_line}")
+    logger.debug(f"Called by function {caller_name} from file: {caller_file}, on line: {caller_line}")
 
 def alphanum_key(s):
     # Rozdělí řetězec na části, kde čísla jsou konvertována na int a zbytek zůstává jako string
@@ -41,13 +41,13 @@ def sortAlphabetically(items):
     new_items = items
     if hasattr(new_items, '__iter__') and not isinstance(new_items, str):
         # Použije přirozené řazení s použitím alphanum_key jako klíčové funkce
-        # print(f"list pred: {new_items}")
+        # logger.debug(f"list pred: {new_items}")
         if '---' in new_items:
             new_items.remove('---')
-            # print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            # logger.debug(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
             return ['---'] + sorted(new_items, key=alphanum_key)
         else:
-            # print(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
+            # logger.debug(f"list po: {['---'] + sorted(new_items, key=alphanum_key)}")
             return sorted(new_items, key=alphanum_key)
 
     else:
@@ -55,11 +55,11 @@ def sortAlphabetically(items):
 
 def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
     allOfType = ["---"]
-    print(searchedType)
+    logger.debug(searchedType)
     if removeEmpty:
         allOfType = []
     for index, row in parts.iterrows():
-        # print(index)
+        # logger.debug(index)
         if index[0] == searchedType:
             if selectedSolver:
                 if not pd.isna(index[selectedSolver]):
@@ -71,8 +71,8 @@ def findAllOfType(parts, selectedSolver, searchedType, removeEmpty=False):
 
 
 def findPathToName(hierarchy, name, currentPath=[]):
-    # print(f"name: {name}")
-    # print(f"hierarchy: {hierarchy}")
+    # logger.debug(f"name: {name}")
+    # logger.debug(f"hierarchy: {hierarchy}")
     if isinstance(hierarchy, list):
         for index, item in enumerate(hierarchy):
             newPath = currentPath + [index]
@@ -102,10 +102,10 @@ def getElementByPath(hierarchy, path):
 
 def findSuperordinantFts(hierarchy, name, superordinants = []):
     path = findPathToName(hierarchy, name)
-    # print(f'path:{path}')
+    # logger.debug(f'path:{path}')
 
     if path is None:
-        # print(f'superordinants:{superordinants}')
+        # logger.debug(f'superordinants:{superordinants}')
         return superordinants
 
     # if it first level under vehicle_spec, use vehicle_spec as superordinant
@@ -113,7 +113,7 @@ def findSuperordinantFts(hierarchy, name, superordinants = []):
         if path[-4] == "FT groups":
             for vehicleSpec in getElementByPath(hierarchy, ["groups", "vehicle_spec"]):
                 superordinants.append(vehicleSpec.get("name",""))
-            # print(f'superordinants:{superordinants}')
+            # logger.debug(f'superordinants:{superordinants}')
             return superordinants
 
     levelUp = -4 if path[-2] == "FTs" else -2
@@ -127,7 +127,7 @@ def findSuperordinantFts(hierarchy, name, superordinants = []):
         findSuperordinantFts(hierarchy, superordinantName, superordinants)
 
 
-    # print(f'superordinants:{superordinants}')
+    # logger.debug(f'superordinants:{superordinants}')
     return superordinants
 
 
@@ -135,10 +135,10 @@ def findSubordinantFts(hierarchy, name, subordinants = None):
     subordinants = [] if subordinants is None else subordinants
     caller = inspect.stack()[1]
     caller_name = caller.function
-    print(f"{caller_name} called my_function")
-    print(f"name: {name} - subordinants: {subordinants}")
+    logger.debug(f"{caller_name} called my_function")
+    logger.debug(f"name: {name} - subordinants: {subordinants}")
     path = findPathToName(hierarchy, name)
-    print(f"name: {name} - path: {path}")
+    logger.debug(f"name: {name} - path: {path}")
     if path is None:
         return subordinants
 
@@ -171,17 +171,17 @@ def getVehicleSpecTypes(hierarchy):
     allSpecTypes = []
     for specType in hierarchy["groups"]["vehicle_spec"]:
         allSpecTypes.append(specType["name"])
-    print(f'allSpecTypes: {allSpecTypes}')
+    logger.debug(f'allSpecTypes: {allSpecTypes}')
     return allSpecTypes
 
 
 def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, name):
     subordinants = findSubordinantFts(hierarchy, name)
-    print(f"subordinants in update_subordinant_items: {subordinants}")
+    logger.debug(f"subordinants in update_subordinant_items: {subordinants}")
     for subordinant in subordinants:
         # if it is multiselection ListBox
         if isinstance(widgetyBuildup[f'vyber_{subordinant}'], gui2.ListBox):
-            print(f"{subordinant} - multiselection ListBox")
+            logger.debug(f"{subordinant} - multiselection ListBox")
             # save selected
             items = widgetyBuildup["vyber_" + subordinant].items
             selectedIndexes = widgetyBuildup["vyber_" + subordinant].selectedIndexes
@@ -202,34 +202,34 @@ def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, nam
 
         # if it is onlyselection Combo
         else:
-            print(f"{subordinant} - onlyselection Combo")
-            print(f"compatibleParts returned: {findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False)}")
+            logger.debug(f"{subordinant} - onlyselection Combo")
+            logger.debug(f"compatibleParts returned: {findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False)}")
             widgetyBuildup["vyber_" + subordinant].setValues(
                 findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, subordinant, removeEmpty=False))
 
 
 def findPathToIncludeFile(partDb, selectedSolver, name):
-    print(f"name: {name}")
+    logger.debug(f"name: {name}")
     if name != "---":
         matching_parts = partDb[partDb.index.get_level_values(1) == name].index.get_level_values(
             selectedSolver).tolist()
-        # print(f"matching_parts: {matching_parts}")
-        # print(f"type: {type(matching_parts[0])}")
+        # logger.debug(f"matching_parts: {matching_parts}")
+        # logger.debug(f"type: {type(matching_parts[0])}")
         if matching_parts and isinstance(matching_parts[0], str):
             path = matching_parts[0]
         else:
             path = ""
     else:
         path = ""
-    # print(f"Path: {path}")
+    # logger.debug(f"Path: {path}")
     return path.replace("\\","/")
 
 def findTypeOfPart(partDb, name):
-    # print(f"name: {name}")
+    # logger.debug(f"name: {name}")
     if name != "---":
         # Get the level values of the columns
         header_values = partDb.columns.get_level_values(2).tolist()
-        # print(f"header_values: {header_values}")
+        # logger.debug(f"header_values: {header_values}")
         if name in header_values:
             # Get the index of the header value
             index_of_name = header_values.index(name)
@@ -239,7 +239,7 @@ def findTypeOfPart(partDb, name):
             partType = ""
     else:
         partType = ""
-    # print(f"partType: {partType}")
+    # logger.debug(f"partType: {partType}")
     return partType
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
@@ -247,55 +247,55 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
     compatibles = [] if removeEmpty else ["---"]
     superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
-    print("find compatibles")
-    print(f"removeEmpty: {removeEmpty}")
-    # print(f"selectedSolver: {selectedSolver}")
+    logger.debug("find compatibles")
+    logger.debug(f"removeEmpty: {removeEmpty}")
+    # logger.debug(f"selectedSolver: {selectedSolver}")
     for part in allOfType:
         compatible = True
-        print(f"part: {part}")
+        logger.debug(f"part: {part}")
         #if the part has not file for current solver, go next
         if pd.isna(parts[parts.index.get_level_values(1) == part].index.get_level_values(selectedSolver)):
-            # print("not compatible")
+            # logger.debug("not compatible")
             continue
         for superordinantType in superordinantTypes:
-            # print(f"superordinant type: {superordinantType}")
-            # print(f"widgetyBuildup[f'vyber_{superordinantType}'].get() = {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
+            # logger.debug(f"superordinant type: {superordinantType}")
+            # logger.debug(f"widgetyBuildup[f'vyber_{superordinantType}'].get() = {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
             if widgetyBuildup[f'vyber_{superordinantType}'].get() and widgetyBuildup[f'vyber_{superordinantType}'].get() != "---":
-                # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0])
-                # print(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())])
-                # print(widgetyBuildup[f'vyber_{superordinantType}'].get())
-                print(
+                # logger.debug(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0])
+                # logger.debug(parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())])
+                # logger.debug(widgetyBuildup[f'vyber_{superordinantType}'].get())
+                logger.debug(
                     f"value: parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]")
-                print(
+                logger.debug(
                     f"widgetyBuildup[f'vyber_superordinantType'].get())]: {widgetyBuildup[f'vyber_{superordinantType}'].get()}")
-                print(f"value: {parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]}")
+                logger.debug(f"value: {parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]}")
                 value = parts.loc[(slice(None), part), (slice(None), slice(None), widgetyBuildup[f'vyber_{superordinantType}'].get())].iat[0, 0]
                 if pd.isna(value) or value == 0:
                     compatible = False
-                    # print(f"compatible: {compatible}")
+                    # logger.debug(f"compatible: {compatible}")
                     break
         if compatible:
             compatibles.append(part)
     sortedCompatibles = sortAlphabetically(compatibles)
-    print(f"compatibles: {sortedCompatibles}")
+    logger.debug(f"compatibles: {sortedCompatibles}")
     return sortedCompatibles
 
 
 
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
-    print(f"event.widget.value: {event.widget.value}")
+    logger.debug(f"event.widget.value: {event.widget.value}")
     updateSubordinantItems(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver, event.widget.name)
     return
 
 
 def getValuesForVehicleSpec(parts, vehicleSpecType, removeEmpty=False):
     print_caller_info()
-    print(f"vehicle_spec_type: {vehicleSpecType}")
+    logger.debug(f"vehicle_spec_type: {vehicleSpecType}")
     allValues = [] if removeEmpty else ["---"]
-    print(f"all_values: {allValues}")
+    logger.debug(f"all_values: {allValues}")
     vehicleSpecColumns = [idx for idx, col in enumerate(parts.columns) if col[1] == vehicleSpecType]
     allValues.extend([parts.columns[col][2] for col in vehicleSpecColumns])
-    print(f"all_values: {allValues}")
+    logger.debug(f"all_values: {allValues}")
     return sortAlphabetically(allValues)
 
 
@@ -315,7 +315,7 @@ def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widge
             levelWidgets.append([(labelGroup)])
         for ft in level.get("FTs", []):
             labelObjekt = gui.Label(text=ft.get("name", ""))
-            print(f"FT název: {ft.get('name', '')}")
+            logger.debug(f"FT název: {ft.get('name', '')}")
             if ft.get("multiselection", False):
                 vyberObjekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
                 vyberObjekt.append(findAllOfType(parts, selectedSolver, ft.get('name', ""), removeEmpty=True))
@@ -407,8 +407,8 @@ def loadSetup(event, widgetyBuildup, selectedSolver, parts):
                     selectedItems = data.get(label,[])
                     for index, item in enumerate(widget.items):
                         if item in selectedItems:
-                            print(f"selected items: {selectedItems}")
-                            print(f"index: {index}, {item}")
+                            logger.debug(f"selected items: {selectedItems}")
+                            logger.debug(f"index: {index}, {item}")
                             widget.select(index)
 
                 elif isinstance(widget, gui2.ComboBox):
@@ -430,8 +430,8 @@ def loadSetup(event, widgetyBuildup, selectedSolver, parts):
 # Method called on clicking 'Reset'.
 def resetModelEdit(event, ModelEdit, selectedSolver, parts):
     for label, widget in ModelEdit.items():
-        # print(label)
-        # print(widget)
+        # logger.debug(label)
+        # logger.debug(widget)
         typ = label.replace("vyber_", "")
 
         # if it is multiselection ListBox
@@ -441,7 +441,7 @@ def resetModelEdit(event, ModelEdit, selectedSolver, parts):
         # if it is onlyselection Combo
         elif isinstance(widget, gui2.ComboBox):
             values = findAllOfType(parts, selectedSolver, typ, removeEmpty=False)
-            print(f"values: {values}")
+            logger.debug(f"values: {values}")
             if len(values) == 1:
                 values = getValuesForVehicleSpec(parts, typ, removeEmpty=False)
             widget.setValues(values)
@@ -460,27 +460,27 @@ def extractAllTypes(hierarchy, onlyNames=False):
                 extract_names(group['groups'])
 
     extract_names(hierarchy['groups']['FT groups'])
-    print(names)
+    logger.debug(names)
     return sortAlphabetically(names)
 
 
 def findAllParts(parts):
     allParts = []
     for index, row in parts.iterrows():
-        print(index[1])
+        logger.debug(index[1])
         allParts.append(index[1])  # přidá obsah druhého sloupce indexu
     return allParts
 
 
 def findCompatibility(df, name2ndColumn, name3rdRow):
-    # print(f"name2ndColumn, name3rdRow: {name2ndColumn}, {name3rdRow}")
+    # logger.debug(f"name2ndColumn, name3rdRow: {name2ndColumn}, {name3rdRow}")
     # Vyhledání řádku na základě názvu ve druhém sloupci (2. úroveň multiindexu)
     idx = df.index.get_level_values(1) == name2ndColumn
     row = df[idx]
 
     # Vyhledání hodnoty z daného sloupce třetího řádku (součást víceúrovňového záhlaví)
     try:
-        # print(f"row.xs(name3rdRow, level=2, axis=1):  {row.xs(name3rdRow, level=2, axis=1)}")
+        # logger.debug(f"row.xs(name3rdRow, level=2, axis=1):  {row.xs(name3rdRow, level=2, axis=1)}")
         if not row.xs(name3rdRow, level=2, axis=1).empty:
             value = row.xs(name3rdRow, level=2, axis=1).iloc[0,0]
             if pd.isna(value):
@@ -492,28 +492,28 @@ def findCompatibility(df, name2ndColumn, name3rdRow):
     try:
         value = int(value)
     except:
-        print(f"not possible to make it integer: {value}")
-    # print(f"returning value: {value}")
+        logger.debug(f"not possible to make it integer: {value}")
+    # logger.debug(f"returning value: {value}")
     return value
 
 def setCompatibility(parts, name2ndColumn, name3rdRow, newValue):
-    print(f"parts: {name2ndColumn} - {name3rdRow}, value: {newValue}")
+    logger.debug(f"parts: {name2ndColumn} - {name3rdRow}, value: {newValue}")
     try:
-        print(parts)
+        logger.debug(parts)
         parts.loc[(slice(None), name2ndColumn), (slice(None), slice(None), name3rdRow)] = newValue
     except KeyError:
-        print(f"Not found")
+        logger.debug(f"Not found")
     return parts
 
 # Definice funkce pro konverzi na int nebo str
 def convertToIntOrStr(x):
     if x.isdigit():
-        # print(f"{x} is digit")
+        # logger.debug(f"{x} is digit")
         try:
             return int(x)
         except ValueError:
             return str(x)
-    # print(f"{x} NOT digit")
+    # logger.debug(f"{x} NOT digit")
     return str(x)
 
 def restoreHeaderInCSV(csvFile):
@@ -539,7 +539,7 @@ def importParts(csvPath=paths["csv"]):
 
 def getSelectedSolver():
     userProfile = hw.evalTcl(f"hm_framework getuserprofile")
-    print(userProfile)
+    logger.debug(userProfile)
     # 2-optistruct 3-radioss - it corresponds to column in csv, where first is index, second is type but it s columnt No. 0, then is OptiStruct as No.1,...
     if userProfile == "OptiStruct {}":
         selectedSolver = 2
@@ -549,8 +549,8 @@ def getSelectedSolver():
 
 
 def findLevel(data, targetName, currentLevel=1):
-    # print(f"data: {data} , type: {type(data)}")
-    # print(f"targetName: {targetName}")
+    # logger.debug(f"data: {data} , type: {type(data)}")
+    # logger.debug(f"targetName: {targetName}")
     if isinstance(data, list):
         for item in data:
             result = findLevel(item, targetName, currentLevel)
@@ -589,7 +589,7 @@ def moveIncludes(parts):
 
     listofIncludesWithHierarchy = []
 
-    print(f'listOfIncludesLables: {listOfIncludesLables}')
+    logger.debug(f'listOfIncludesLables: {listOfIncludesLables}')
 
     for i, label in enumerate(listOfIncludesLables):
         hierarchy = findLevel(hierarchyOfTypes, findTypeOfPart(parts, label))
@@ -598,46 +598,46 @@ def moveIncludes(parts):
         x, y, z = moved_data[i]
         listofIncludesWithHierarchy.append((id, label, labelOriginal, hierarchy, x, y, z))
 
-    print(f'listofIncludesWithHierarchy: {listofIncludesWithHierarchy}')
+    logger.debug(f'listofIncludesWithHierarchy: {listofIncludesWithHierarchy}')
 
     sortedListofIncludesWithHierarchy = sorted(listofIncludesWithHierarchy, key=lambda x: x[3], reverse=True)
 
     for i, (id, label, labelOriginal, hierarchy, x_orig, y_orig, z_orig) in enumerate(sortedListofIncludesWithHierarchy):
-        print(f"Going to move {label}?")
+        logger.debug(f"Going to move {label}?")
         moving_finished = False
         for id2, label2, labelOriginal2, hierarchy2, _, _, _ in sortedListofIncludesWithHierarchy:
             compatibilityValue = findCompatibility(parts, label, label2)
-            # print(f"compatibilita: {label} + {label2}: {compatibilityValue}")
+            # logger.debug(f"compatibilita: {label} + {label2}: {compatibilityValue}")
             if not isinstance(compatibilityValue, int):
                 if '[' in compatibilityValue and ']' in compatibilityValue:
-                    print(f"going to move: {label} - {label2}: {compatibilityValue}")
+                    logger.debug(f"going to move: {label} - {label2}: {compatibilityValue}")
                     numbers = re.findall(r'-?\d+', compatibilityValue)
                     x, y, z = map(int, numbers)
-                    print(f"_moved x, y, z: {x_orig}, {y_orig}, {z_orig}")
-                    print(f"compatibility x, y, z: {x}, {y}, {z}")
+                    logger.debug(f"_moved x, y, z: {x_orig}, {y_orig}, {z_orig}")
+                    logger.debug(f"compatibility x, y, z: {x}, {y}, {z}")
                     new_label = label + "_moved_" + str(x) + "_" + str(y) + "_" + str(z)
                     x = x - x_orig
                     y = y - y_orig
                     z = z - z_orig
-                    print(f"x, y, z: {x}, {y}, {z}")
+                    logger.debug(f"x, y, z: {x}, {y}, {z}")
                     moving_finished = True
                     if x or y or z:
-                        print("moving")
-                        print(
+                        logger.debug("moving")
+                        logger.debug(
                             f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
                         hw.evalTcl(
                             f'source "{paths["tcl"]}"; move_include "{new_label}" {id} {x} {y} {z}')
                         break
                 else:
-                    print("compatibility value is not int and does not contain both brackets [ and ]")
+                    logger.debug("compatibility value is not int and does not contain both brackets [ and ]")
         if not moving_finished:
-            print(f"{label}: not found moving coordinates - moving back to initial position")
-            print(
+            logger.debug(f"{label}: not found moving coordinates - moving back to initial position")
+            logger.debug(
                 f'source "{paths["tcl"]}"; move_include "{label}" {id} {-x_orig} {-y_orig} {-z_orig}')
             hw.evalTcl(
                 f'source "{paths["tcl"]}"; move_include "{label}" {id} {-x_orig} {-y_orig} {-z_orig}')
         else:
-            print(f"{label}: doing nothing")
+            logger.debug(f"{label}: doing nothing")
 
 
 

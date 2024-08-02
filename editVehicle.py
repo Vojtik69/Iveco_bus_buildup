@@ -1,10 +1,10 @@
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -26,7 +26,7 @@ class ModelEdit:
         self.selectedSolver = getSelectedSolver()
         self.columnWidth = 230
 
-        print("Initiating...")
+        logger.debug("Initiating...")
 
     def onCloseModelBuildup(self, event):
         self.dialogModelEdit.hide()
@@ -46,17 +46,17 @@ class ModelEdit:
             else:
                 listOfIncludes.append(item)
 
-        print(f"listOfIncludes: {listOfIncludes}")
+        logger.debug(f"listOfIncludes: {listOfIncludes}")
         listOfIncludesIds = hw.evalTcl("hm_getincludes").split()
         partTypes = []
         for include in listOfIncludes:
             partType = findTypeOfPart(self.parts, include)
             if partType:
                 partTypes.append(partType)
-        print(f"partTypes: {partTypes}")
+        logger.debug(f"partTypes: {partTypes}")
         data = []
         for label, widget in self.widgetyModelEdit.items():
-            print(f"label: {label}")
+            logger.debug(f"label: {label}")
             if isinstance(widget, gui2.ListBox):
                 items = widget.items
                 selectedIndexes = widget.selectedIndexes
@@ -66,7 +66,7 @@ class ModelEdit:
             elif isinstance(widget, gui2.ComboBox):
                 selectedValue = widget.value
                 data.append(selectedValue)
-        print(f"data: {data}")
+        logger.debug(f"data: {data}")
         # to be safe, we will end batch import if it was not terminated earlier
         hw.evalTcl('*end_batch_import')
         try:
@@ -79,38 +79,38 @@ class ModelEdit:
                         listOfIncludes.remove(part)
                     else:
                         path = findPathToIncludeFile(self.parts, self.selectedSolver, part)
-                        print(f"part: {part}")
-                        print(f"path: {path}")
+                        logger.debug(f"part: {part}")
+                        logger.debug(f"path: {path}")
                         if os.path.exists(path):
                             hw.evalTcl(f'source "{paths["tcl"]}"; import_data "{path}" "{part}" "{self.selectedSolver}"')
                         else:
                             hw.evalTcl(f'source "{paths["tcl"]}"; create_include "{part}"')
-                            print(f"Include file {path} for {part} does not exist. Creating empty include.")
+                            logger.debug(f"Include file {path} for {part} does not exist. Creating empty include.")
 
             try:
                 hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
             except:
-                print("not able to unrealize connectors")
+                logger.debug("not able to unrealize connectors")
 
             try:
-                print(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
+                logger.debug(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
                 hw.evalTcl(
                     f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
             except:
-                print("Unable to delete rest of includes")
+                logger.debug("Unable to delete rest of includes")
 
             moveIncludes(self.parts)
 
         except Exception as e:
-            print(f"Error in batch import: {e}")
+            logger.debug(f"Error in batch import: {e}")
 
         hw.evalTcl('*end_batch_import')
 
-        print("realizing connectors")
+        logger.debug("realizing connectors")
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
-            print("not able to realize connectors")
+            logger.debug("not able to realize connectors")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model edit has finished!')
@@ -122,7 +122,7 @@ class ModelEdit:
 
     def loadCurrentIncludes(self):
         self.selectedSolver = getSelectedSolver()
-        print(f"selectedSolver: {self.selectedSolver}")
+        logger.debug(f"selectedSolver: {self.selectedSolver}")
 
         pattern = r'\{.*?\}|\S+'
         matches = re.findall(pattern, hw.evalTcl("hm_getincludes -byshortname"))
@@ -139,13 +139,13 @@ class ModelEdit:
             partType = findTypeOfPart(self.parts, include)
             if partType:
                 partTypes.append(partType)
-        print(f"listOfIncludes: {listOfIncludes}")
-        print(f"partTypes: {partTypes}")
+        logger.debug(f"listOfIncludes: {listOfIncludes}")
+        logger.debug(f"partTypes: {partTypes}")
 
         for i, includeName in enumerate(listOfIncludes):
             partType = partTypes[i]
-            print(f"partType: {partType}")
-            print(f"includeName: {includeName}")
+            logger.debug(f"partType: {partType}")
+            logger.debug(f"includeName: {includeName}")
             try:
                 widget = self.widgetyModelEdit[f"vyber_{partType}"]
             except:
@@ -153,17 +153,17 @@ class ModelEdit:
 
             try:
                 if isinstance(widget, gui2.ListBox):
-                    print("ListBox")
+                    logger.debug("ListBox")
                     for index, item in enumerate(widget.items):
                         if item == includeName:
-                            print(f"index, item: {index, item}")
+                            logger.debug(f"index, item: {index, item}")
                             widget.select(index)
                 elif isinstance(widget, gui2.ComboBox):
-                    print("ComboBox")
+                    logger.debug("ComboBox")
                     widget.value = includeName
                 updateSubordinantItems(hierarchyOfTypes, self.parts, self.widgetyModelEdit, self.selectedSolver, partType)
             except:
-                print("Error in selecting parts in ComboBox or Listbox")
+                logger.debug("Error in selecting parts in ComboBox or Listbox")
                 pass
 
     def modelEditGui(self):
@@ -211,7 +211,7 @@ def mainFunc(*args, **kwargs):
     model_edit = ModelEdit()
     width, height = model_edit.modelEditGui()
     model_edit.dialogModelEdit.show(width=width, height=height)
-    print("Initiated...")
+    logger.debug("Initiated...")
 
 
 if __name__ == "__main__":

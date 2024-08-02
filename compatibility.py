@@ -1,10 +1,10 @@
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 import hwui
 from hw import *
 from hw.hv import *
@@ -15,7 +15,7 @@ import pandas as pd
 
 from common import findSubordinantFts, findSuperordinantFts, findAllOfType, getVehicleSpecTypes, getValuesForVehicleSpec, findCompatibility, setCompatibility, paths, restoreHeaderInCSV
 
-print("Initiating Compatibility GUI...")
+logger.debug("Initiating Compatibility GUI...")
 
 dialogSetCompatibility = gui.Dialog(caption="Set compatibility")
 
@@ -33,7 +33,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     button_0 = {}
     button_1 = {}
 
-    print(parts)
+    logger.debug(parts)
 
     def onCancelCompatibilityGUI():
         dialogSetCompatibility.Hide()
@@ -74,16 +74,16 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         return table
 
     def goThruTable(table, parts, partName):
-        # print(f"celldata: {table.model.model.root.celldata}")
-        # print(table.model.model.root.getData())
-        # print(f"len(celldata): {len(table.model.model.root.celldata)}")
+        # logger.debug(f"celldata: {table.model.model.root.celldata}")
+        # logger.debug(table.model.model.root.getData())
+        # logger.debug(f"len(celldata): {len(table.model.model.root.celldata)}")
         for row in table.model.model.root.celldata:
-            # print(f"row: {row}")
-            # print(f"len(row): {len(row)}")
+            # logger.debug(f"row: {row}")
+            # logger.debug(f"len(row): {len(row)}")
             if len(row) > 0:
                 compatibilityWith = row[0].get('value', None)
                 newValue = row[1].get('value', None)
-                print(f"compatibilityWith: {compatibilityWith}-{newValue}")
+                logger.debug(f"compatibilityWith: {compatibilityWith}-{newValue}")
                 parts = setCompatibility(parts, partName, compatibilityWith, newValue)
         return parts
 
@@ -113,27 +113,27 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
         new_header =("ft", partInfo["partType"], partInfo["partName"])
         columns_tuples = parts.columns.tolist()
         columns_tuples[positionHeader] = new_header
-        print(f"columns_tuples: {columns_tuples}")
-        print(f"parts.columns.names: {parts.columns.names}")
+        logger.debug(f"columns_tuples: {columns_tuples}")
+        logger.debug(f"parts.columns.names: {parts.columns.names}")
         parts.columns = pd.MultiIndex.from_tuples(columns_tuples, names=parts.columns.names)
 
         # Edit values
         parts = forAllTables(parts, partInfo["partName"])
 
         # Move row values to column
-        print(f"positionIndex: {positionIndex}")
-        print(f"positionHeader: {positionHeader}")
+        logger.debug(f"positionIndex: {positionIndex}")
+        logger.debug(f"positionHeader: {positionHeader}")
         row = parts.iloc[positionIndex]
-        print(f"row.values: {row.values}")
+        logger.debug(f"row.values: {row.values}")
         ft_columns = [col for col in parts.columns if col[0] == 'ft']
-        print(f"ft_columns: {ft_columns}")
+        logger.debug(f"ft_columns: {ft_columns}")
         row_ft = row[ft_columns]
-        print(row_ft.values)
-        print(parts.iloc[:, positionHeader].values)
+        logger.debug(row_ft.values)
+        logger.debug(parts.iloc[:, positionHeader].values)
         parts.iloc[:, positionHeader] = row_ft.values
 
         # Write down
-        print(parts)
+        logger.debug(parts)
         parts.to_csv(paths["csv"])
         restoreHeaderInCSV(paths["csv"])
 
@@ -142,14 +142,14 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
 
     def addPartToDB(event, parts, partInfo):
-        print(f"parts in addPartToDB:{parts}")
-        print(f"partInfo.values(): {partInfo.values()}")
+        logger.debug(f"parts in addPartToDB:{parts}")
+        logger.debug(f"partInfo.values(): {partInfo.values()}")
         new_row_df = pd.DataFrame(pd.NA, index=[tuple(partInfo.values())], columns=parts.columns)
-        print(f"new_row_df: {new_row_df}")
+        logger.debug(f"new_row_df: {new_row_df}")
         parts = pd.concat([parts, new_row_df], axis=0)
-        print(f"1:{parts}")
+        logger.debug(f"1:{parts}")
         parts = forAllTables(parts, partInfo.get("partName",""))
-        print(f"2:{parts}")
+        logger.debug(f"2:{parts}")
         last_row = parts.iloc[-1]
         last_index = parts.index[-1]
 
@@ -160,10 +160,10 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
         # Přidání nového sloupce s daty z posledního řádku
         parts[new_column_name] = pd.NA
-        print(f"3:{parts}")
+        logger.debug(f"3:{parts}")
         parts.iloc[:-1, parts.columns.get_loc(new_column_name)] = last_row_ft.values
-        print(f"4:{parts}")
-        print(parts)
+        logger.debug(f"4:{parts}")
+        logger.debug(parts)
         parts.to_csv(paths["csv"])
         restoreHeaderInCSV(paths["csv"])
 
@@ -246,7 +246,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     cancel  = gui.Button('Cancel', command=onCancelCompatibilityGUI)
 
 
-    print(f"initiator: {initiator.caption}")
+    logger.debug(f"initiator: {initiator.caption}")
 
     if initiator.caption == "Edit Part":
         confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts, partInfo))
@@ -259,7 +259,7 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     sepHorizontal1 = gui.Separator(orientation='horizontal', spacing='2')
     sepHorizontal2 = gui.Separator(orientation='horizontal', spacing='3')
 
-    print(partInfo)
+    logger.debug(partInfo)
 
     label_partName = gui.Label(text=f"{partInfo.get('partName', '---')} -", font={'bold': True})
     label_partType = gui.Label(text=partInfo.get("partType", "---"), font={'bold': True})

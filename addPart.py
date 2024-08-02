@@ -1,10 +1,11 @@
+
 import os
 import sys
-# Získání cesty k aktuálně běžícímu skriptu
+# Get path to currently running script
 currentDir = os.path.dirname(os.path.realpath(__file__))
-print(f"dirname: {currentDir}")
-# Přidání této cesty do sys.path
+# Add path to sys.path
 sys.path.append(currentDir)
+import logger
 from hw import *
 from hw.hv import *
 from hwx.xmlui import gui
@@ -114,7 +115,7 @@ class DialogAddPart:
 def mainFunc(*args, **kwargs):
     dialogAddPart = DialogAddPart()
     dialogAddPart.dialogAddPart.show(width=dialogAddPart.width, height=dialogAddPart.height)
-    print("Initiated AddPart...")
+    logger.debug("Initiated AddPart...")
 
 if __name__ == "__main__":
     mainFunc()
