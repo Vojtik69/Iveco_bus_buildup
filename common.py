@@ -16,14 +16,10 @@ import inspect
 import os
 import re
 import traceback
+from loadConfig import paths
 
 logger.debug("loading common.py")
 
-# load config file
-with open(f'{currentDir}\config.yaml', 'r') as file:
-    config = yaml.safe_load(file)
-config['paths']['tcl'] = (currentDir + r'\tcl_functions.tcl').replace("\\", "/")
-paths = config['paths']
 
 def print_caller_info():
     stack_trace = traceback.extract_stack()
