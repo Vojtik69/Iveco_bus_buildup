@@ -2,11 +2,16 @@ import os
 import sys
 import logging
 from datetime import datetime
+from loadConfig import paths
 
-# Získání cesty k aktuálnímu skriptu
-currentDir = os.path.dirname(os.path.realpath(__file__))
-logPath = os.path.join(currentDir, 'log.log')
+logPath = paths.get("log","")
+print(f"logPath: {repr(logPath)}")
+if not logPath:
+    print("I am in")
+    home_dir = os.path.expanduser("~")
+    logPath = os.path.join(home_dir, "Documents", "Altair", "iveco_log.log")
 
+print(f"logPath: {repr(logPath)}")
 # Define global variables
 LOGGER = None
 FORMAT_STR = '%(asctime)s - %(levelname)s - %(message)s'
@@ -24,6 +29,13 @@ def SetupLogger():
 
     LOGGER = logging.getLogger('my_logger')
     LOGGER.setLevel(logging.DEBUG)
+
+    # Check if the log file exist and create it if necessary
+    logDir = os.path.dirname(logPath)
+    if not os.path.exists(logDir):
+        os.makedirs(logDir)  # Create folder if missing
+    if not os.path.exists(logPath):
+        open(logPath, 'w').close()  # Create file if missing
 
     console_handler = logging.StreamHandler(sys.stdout)
     FILE_HANDLER = logging.FileHandler(logPath, encoding="utf-8")
