@@ -548,11 +548,13 @@ def findLevel(data, targetName, currentLevel=1):
     # logger.debug(f"data: {data} , type: {type(data)}")
     # logger.debug(f"targetName: {targetName}")
     if isinstance(data, list):
+        # logger.debug(f"is instance of list")
         for item in data:
             result = findLevel(item, targetName, currentLevel)
             if result is not None:
                 return result
     elif isinstance(data, dict):
+        # logger.debug(f"is instance of dict")
         if 'name' in data and data['name'] == targetName:
             return currentLevel
         for key, value in data.items():

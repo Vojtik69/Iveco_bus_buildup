@@ -130,7 +130,7 @@ class ModelBuildup:
 
             moveIncludes(self.parts)
         except Exception as e:
-            logger.debug(f"Error in batch import: {e}")
+            logger.critical(f"Error in batch import: {e}")
         logger.debug("ending batch import")
         hw.evalTcl(f'puts "Going to end batch import"')
         hw.evalTcl(f'*end_batch_import')
@@ -138,10 +138,11 @@ class ModelBuildup:
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
-            logger.debug("not able to realize connectors")
+            logger.critical(f"not able to realize connectors")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
+        logger.debug("Model build-up has finished!")
         self.dialogModelBuildup = gui.Dialog(caption="Bus model build-up")
 
     def onResetModelBuildup(self, event):

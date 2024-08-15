@@ -60,15 +60,9 @@ groups:
                 multiselection: False
               - name: Left Lateral Others
                 multiselection: True
-      - name: Right Lateral Structure Assembly
+      - name: Other complements
         skippable: True
         FTs:
-          - name: FT 13
-            multiselection: False
-        groups:
-          - name: Right Lateral Equipment
-            skippable: False
-            FTs:
-              - name: Right Lateral Others
-                multiselection: True
+          - name: Materials
+            multiselection: True
 

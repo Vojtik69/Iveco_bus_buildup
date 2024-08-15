@@ -41,11 +41,13 @@ proc relink_connectors {} {
 
     foreach item $inputList {
         set id [lindex $item 0]
+        set layers [lindex $item 1]
         set config [lindex $item 4]
+        if {$layers == 0} {set layers -1}
         if {$config == "spring"} {
-            lappend for_nodes $id
+            lappend for_nodes $id $layers
         } else {
-            lappend for_components $id
+            lappend for_components $id $layers
         }
     }
 
@@ -53,12 +55,7 @@ proc relink_connectors {} {
 
     set createarrayCmd "*createarray"
     set num_elements [llength $for_nodes]
-    # Append the count of elements in inputList multiplied by 2 (each ID followed by -1)
-    append createarrayCmd " [expr {$num_elements * 2}]"
-    foreach item $for_nodes {
-        set id [lindex $item 0]
-        append createarrayCmd " $id -1"
-    }
+    set createarrayCmd [concat $createarrayCmd [list $num_elements] $for_nodes]
     eval $createarrayCmd
 
     *createmark nodes 2 "displayed"
@@ -73,19 +70,14 @@ proc relink_connectors {} {
 
     *createstringarray 5 "ce_spot_extralinknum=0" "ce_seam_extralinknum=0" "ce_spot_non_normal=0" \
       "ce_area_non_normal=0" "ce_preferdifflinksperlayer=0"
-    *CE_AddLinkEntitiesWithArrays 1 [expr {$num_elements * 2}] nodes 2 1 1 1 1 1 $num_elements 0 1 5
+    *CE_AddLinkEntitiesWithArrays 1 $num_elements nodes 2 1 1 1 1 1 [expr {$num_elements / 2}]  0 1 5
     *clearmark connectors 1
 
     #### FOR_COMPONENTS
 
     set createarrayCmd "*createarray"
     set num_elements [llength $for_components]
-    # Append the count of elements in inputList multiplied by 2 (each ID followed by -1)
-    append createarrayCmd " [expr {$num_elements * 2}]"
-    foreach item $for_components {
-        set id [lindex $item 0]
-        append createarrayCmd " $id -1"
-    }
+    set createarrayCmd [concat $createarrayCmd [list $num_elements] $for_components]
     eval $createarrayCmd
 
     *createmark components 2 "displayed"
@@ -100,7 +92,7 @@ proc relink_connectors {} {
 
     *createstringarray 5 "ce_spot_extralinknum=0" "ce_seam_extralinknum=0" "ce_spot_non_normal=1" \
       "ce_area_non_normal=0" "ce_preferdifflinksperlayer=0"
-    *CE_AddLinkEntitiesWithArrays 1 [expr {$num_elements * 2}] components 2 1 1 1 1 1 $num_elements 0 1 5
+    *CE_AddLinkEntitiesWithArrays 1 $num_elements components 2 1 1 1 1 1 [expr {$num_elements / 2}]  0 1 5
     *clearmark connectors 1
 }
 
@@ -179,25 +171,47 @@ proc realize_connectors_by_type {id type} {
 
 }
 
+proc change_cardimage_of_rigid_components {} {
+    set comp_names [hm_entitylist comps name]
+
+    # Iterate over each item in the list
+    foreach item $comp_names {
+        # Check if the name contains "rigidlnk (midnode)"
+        if {[string first "rigidlnk (midnode)" $item] != -1} {
+            eval "*setvalue comps name=\"$item\" cardimage=\"\""
+        }
+    }
+
+}
+
 proc realize_connectors {} {
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - in realize_connectors proc"
+
     *setoption g_ce_elem_org_option=4
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to relink connectors"
     relink_connectors
     *clearmark connectors 1
     *createmark connectors 1 "all"
     *CE_ConnectorRemoveDuplicates 1 0.1
 
     set includes [hm_getincludes]
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to realize stitch connectors"
     foreach include $includes {
         *setcurrentinclude $include ""
         realize_connectors_by_type $include "stitch"
     }
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to realize other connectors"
     foreach include $includes {
         *setcurrentinclude $include ""
         realize_connectors_by_type $include "others"
     }
 
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to equivalence"
     equivalence
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to modelcheck_applyautocorrection"
     *modelcheck_applyautocorrection Multiple Rigids or RBE3s sharing nodes ALL ALL 0
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to change_cardimage_of_rigid_components"
+    change_cardimage_of_rigid_components
 }
 
 proc unrealize_connectors {} {
