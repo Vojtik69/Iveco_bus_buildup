@@ -13,12 +13,10 @@ from hwx import gui as gui2
 import pandas as pd
 
 from common import (
-    findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure,
-    resetModelEdit, importParts, hierarchyOfTypes, paths, findCompatibleParts,
-    findAllOfType, getValuesForVehicleSpec, extractAllTypes, findAllParts
+    importParts, hierarchyOfTypes, extractAllTypes, findAllParts
 )
 
-from compatibility import SetCompatibilityGUI, showCompatibilityGUI
+from compatibility import showCompatibilityGUI
 
 parts = importParts()
 

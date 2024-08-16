@@ -48,18 +48,14 @@ groups:
             multiselection: False
           - name: FT 9
             multiselection: False
-        groups:
-          - name: Left Lateral Equipment
-            skippable: False
-            FTs:
-              - name: FT 10
-                multiselection: False
-              - name: FT 11
-                multiselection: False
-              - name: FT 12
-                multiselection: False
-              - name: Left Lateral Others
-                multiselection: True
+          - name: FT 10
+            multiselection: False
+          - name: FT 11
+            multiselection: False
+          - name: FT 12
+            multiselection: False
+          - name: Left Lateral Others
+            multiselection: True
       - name: Other complements
         skippable: True
         FTs:

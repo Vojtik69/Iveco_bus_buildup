@@ -53,7 +53,7 @@ def SetupLogger():
     LOGGER.addHandler(FILE_HANDLER)
 
 def trim_log_file():
-    """ Ořízněte log soubor tak, aby obsahoval maximálně MAX_LINES řádků. """
+    """ Trim the log to have MAX_LINES lines. """
     with open(logPath, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
@@ -81,3 +81,5 @@ def debug(message):
 
 SetupLogger()
 
+# Export logger instance
+logger = LOGGER

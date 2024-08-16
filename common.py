@@ -172,6 +172,9 @@ def getVehicleSpecTypes(hierarchy):
 
 
 def updateSubordinantItems(hierarchy, parts, widgetyBuildup, selectedSolver, name):
+    caller = inspect.stack()[1]
+    caller_name = caller.function
+    logger.debug(f"{caller_name} called updateSubordinantItems")
     subordinants = findSubordinantFts(hierarchy, name)
     logger.debug(f"subordinants in update_subordinant_items: {subordinants}")
     for subordinant in subordinants:
@@ -240,12 +243,15 @@ def findTypeOfPart(partDb, name):
 
 def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, removeEmpty=False):
     # print_caller_info()
+    caller = inspect.stack()[1]
+    caller_name = caller.function
+    logger.debug(f"{caller_name} called findCompatibleParts")
     compatibles = [] if removeEmpty else ["---"]
     superordinantTypes = findSuperordinantFts(hierarchy, name, superordinants=[])
     allOfType = findAllOfType(parts, selectedSolver, name, removeEmpty=True)
     logger.debug("find compatibles")
     logger.debug(f"removeEmpty: {removeEmpty}")
-    # logger.debug(f"selectedSolver: {selectedSolver}")
+    logger.debug(f"selectedSolver: {selectedSolver}")
     for part in allOfType:
         compatible = True
         logger.debug(f"part: {part}")
@@ -279,6 +285,9 @@ def findCompatibleParts(hierarchy, parts, widgetyBuildup, selectedSolver, name, 
 
 
 def onSelectedCombo(event, parts, hierarchyOfTypes, widgetyBuildup, selectedSolver):
+    caller = inspect.stack()[1]
+    caller_name = caller.function
+    logger.debug(f"{caller_name} called onSelectedCombo")
     logger.debug(f"event.widget.value: {event.widget.value}")
     updateSubordinantItems(hierarchyOfTypes, parts, widgetyBuildup, selectedSolver, event.widget.name)
     return
@@ -311,7 +320,7 @@ def getWidgetStructure(structure, hierarchyOfTypes, parts, selectedSolver, widge
             levelWidgets.append([(labelGroup)])
         for ft in level.get("FTs", []):
             labelObjekt = gui.Label(text=ft.get("name", ""))
-            logger.debug(f"FT název: {ft.get('name', '')}")
+            logger.debug(f"FT nazev: {ft.get('name', '')}")
             if ft.get("multiselection", False):
                 vyberObjekt = gui2.ListBox(selectionMode="ExtendedSelection", name=ft.get('name', ""), width=150-(offset*5))
                 vyberObjekt.append(findAllOfType(parts, selectedSolver, ft.get('name', ""), removeEmpty=True))
@@ -609,8 +618,8 @@ def moveIncludes(parts):
             if not isinstance(compatibilityValue, int):
                 if '[' in compatibilityValue and ']' in compatibilityValue:
                     logger.debug(f"going to move: {label} - {label2}: {compatibilityValue}")
-                    numbers = re.findall(r'-?\d+', compatibilityValue)
-                    x, y, z = map(int, numbers)
+                    numbers = re.findall(r'-?\d+(?:\.\d+)?', compatibilityValue)
+                    x, y, z = map(float, numbers)
                     logger.debug(f"_moved x, y, z: {x_orig}, {y_orig}, {z_orig}")
                     logger.debug(f"compatibility x, y, z: {x}, {y}, {z}")
                     new_label = label + "_moved_" + str(x) + "_" + str(y) + "_" + str(z)

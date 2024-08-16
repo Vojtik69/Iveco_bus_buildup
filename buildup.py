@@ -14,7 +14,7 @@ from common import (
     findPathToIncludeFile, getWidgetStructure, getWidgetVehicleSpecStructure,
     saveSetup, loadSetup, resetModelEdit, importParts, hierarchyOfTypes, paths,
     findCompatibleParts, findAllOfType, getValuesForVehicleSpec, getSelectedSolver,
-    solverInterface, print_caller_info, findLevel, findCompatibility, moveIncludes
+    solverInterface, print_caller_info, findLevel, moveIncludes, onSelectedCombo
 )
 
 
@@ -56,6 +56,10 @@ class ModelBuildup:
                         widget.select(index)
 
             elif isinstance(widget, gui2.ComboBox):
+                # update widget.command to update selectedSolver in it
+                widget.command = lambda event: onSelectedCombo(
+                    event, self.parts, hierarchyOfTypes, self.widgetyBuildup,self.selectedSolver)
+
                 selected_value = widget.value
                 if label.replace("vyber_", "") in [item['name'] for item in hierarchyOfTypes['groups']['vehicle_spec']]:
                     values = getValuesForVehicleSpec(self.parts, label.replace("vyber_", ""), removeEmpty=False)
@@ -130,7 +134,7 @@ class ModelBuildup:
 
             moveIncludes(self.parts)
         except Exception as e:
-            logger.critical(f"Error in batch import: {e}")
+            logger.logger.critical(f"Error in batch import: {e}")
         logger.debug("ending batch import")
         hw.evalTcl(f'puts "Going to end batch import"')
         hw.evalTcl(f'*end_batch_import')
@@ -138,7 +142,7 @@ class ModelBuildup:
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
         except:
-            logger.critical(f"not able to realize connectors")
+            logger.logger.critical(f"not able to realize connectors")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
