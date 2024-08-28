@@ -18,12 +18,11 @@ from common import (
 
 from compatibility import showCompatibilityGUI
 
-parts = importParts()
-
 class DialogAddPart:
     def __init__(self):
         self.currentDir = os.path.dirname(os.path.realpath(__file__))
         sys.path.append(self.currentDir)
+        self.parts = importParts()
         self.widgetyAddPart = {}
         self.dialogAddPart = gui.Dialog(caption="Add Part")
         self.width = 200
@@ -79,7 +78,7 @@ class DialogAddPart:
         self.widgetyAddPart['vyber_typ'].value = ""
 
     def checkNotEmpty(self, event=None):
-        if self.widgetyAddPart['vyber_nazev'].value in findAllParts(parts):
+        if self.widgetyAddPart['vyber_nazev'].value in findAllParts(self.parts):
             gui2.tellUser("Name of new part is not unique")
             return
 
@@ -106,7 +105,7 @@ class DialogAddPart:
         }
 
         showCompatibilityGUI(
-            self.dialogAddPart, self.widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, parts, partInfo
+            self.dialogAddPart, self.widgetyAddPart['vyber_typ'].value, hierarchyOfTypes, self.parts, partInfo
         )
         self.dialogAddPart.hide()
 

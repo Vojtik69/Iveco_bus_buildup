@@ -13,7 +13,7 @@ if not logPath:
 LOGGER = None
 FORMAT_STR = '%(asctime)s - %(levelname)s - %(message)s'
 FILE_HANDLER = None
-MAX_LINES = 4000
+MAX_LINES = 20000
 
 
 def SetupLogger():
