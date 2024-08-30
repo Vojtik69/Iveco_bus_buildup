@@ -99,12 +99,6 @@ class ModelEdit:
             except Exception as e:
                 logger.logger.critical(f"Unable to delete rest of includes: {e}")
 
-            logger.debug("correcting nodes in main include")
-            try:
-                hw.evalTcl(f'source "{paths["tcl"]}"; correct_nodes')
-            except Exception as e:
-                logger.logger.critical(f"not able to correct nodes in main include: {e}")
-
             moveIncludes(self.parts)
 
         except Exception as e:
