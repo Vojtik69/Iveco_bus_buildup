@@ -245,3 +245,22 @@ proc move_include {new_name id x y z} {
 proc create_include {name} {
     *createinclude 0 "$name" "$name" 0
 }
+
+proc correct_nodes {} {
+    *createmark nodes 1 "by include" 0
+    *findmark nodes 1 1 1 elements 0 2
+
+    foreach include_id [hm_getincludes] {
+        *clearmark nodes 2
+        *clearmark elems 1
+        *createmark elems 1 "by include" $include_id
+        *markintersection elems 1 elems 2
+        if {[hm_marklength elems 1] > 0} {
+            *findmark elems 1 1 1 nodes 0 2
+            *markintersection nodes 2 nodes 1
+            *markmovetoinclude nodes 2 $include_id
+        }
+
+    }
+
+}
