@@ -587,7 +587,7 @@ def moveIncludes(parts):
         if '_moved' in item:
             base_label, moved_part = item.split('_moved', 1)
             coords = moved_part.split('_')[1:]  # Extract x, y, z
-            x, y, z = map(int, coords)
+            x, y, z = map(float, coords)
             listOfIncludesLables.append(base_label)
             moved_data.append((x, y, z))
         else:

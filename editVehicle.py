@@ -89,28 +89,28 @@ class ModelEdit:
 
             try:
                 hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
-            except:
-                logger.debug("not able to unrealize connectors")
+            except Exception as e:
+                logger.logger.critical(f"not able to unrealize connectors: {e}")
 
             try:
                 logger.debug(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
                 hw.evalTcl(
                     f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
-            except:
-                logger.debug("Unable to delete rest of includes")
+            except Exception as e:
+                logger.logger.critical(f"Unable to delete rest of includes: {e}")
 
             moveIncludes(self.parts)
 
         except Exception as e:
-            logger.debug(f"Error in batch import: {e}")
+            logger.logger.critical(f"Error in batch import: {e}")
 
         hw.evalTcl('*end_batch_import')
 
         logger.debug("realizing connectors")
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
-        except:
-            logger.debug("not able to realize connectors")
+        except Exception as e:
+            logger.logger.critical(f"not able to realize connectors: {e}")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model edit has finished!')
