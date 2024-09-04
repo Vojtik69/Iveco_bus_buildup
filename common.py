@@ -647,6 +647,56 @@ def moveIncludes(parts):
             logger.debug(f"{label}: doing nothing")
 
 
+def repair_exported_include(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        with open(file_path, 'w') as file:
+            replaced = False
+
+            for line in lines:
+                if not replaced and line.strip() == 'TORS_XML_INFO_START':
+                    file.write('##CONNECTORS_XML_INFO_START' + '\n')
+                    replaced = True
+                else:
+                    file.write(line)
+
+    except FileNotFoundError:
+        print(f"File '{file_path}' has not been found.")
+    except Exception as e:
+        print(f"Error when repairing exported include: {e}")
+
+
+# convert Tcl output string to python list
+def split_text(text):
+    # Regular expression to match text inside {}
+    pattern = r'\{[^}]*\}'
+
+    # Find all occurrences of text inside {}
+    matches = re.findall(pattern, text)
+
+    # Remove the curly brackets from the matched text
+    matches = [match[1:-1] for match in matches]  # Remove first and last character (curly brackets)
+
+    # Replace text inside {} with placeholders
+    placeholder = 'PLACEHOLDER'
+    for match in re.findall(pattern, text):  # Use re.findall to get exact matches for replacement
+        text = text.replace(match, placeholder, 1)
+
+    # Split the remaining text by spaces
+    parts = text.split()
+
+    # Restore the original text without the curly brackets
+    result = []
+    for part in parts:
+        if part == placeholder:
+            result.append(matches.pop(0))
+        else:
+            result.append(part)
+
+    return result
+
 
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
 
