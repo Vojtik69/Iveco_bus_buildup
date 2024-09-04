@@ -141,8 +141,8 @@ class ModelBuildup:
         logger.debug("realizing connectors")
         try:
             hw.evalTcl(f'source "{paths["tcl"]}"; realize_connectors')
-        except:
-            logger.logger.critical(f"not able to realize connectors")
+        except Exception as e:
+            logger.logger.critical(f"not able to realize connectors: {e}")
 
         self.onCloseModelBuildup(None)
         gui2.tellUser('Model build-up has finished!')
