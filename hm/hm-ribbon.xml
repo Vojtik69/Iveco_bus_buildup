@@ -4,6 +4,7 @@
         <action tag="EditVehicle" text="Edit Vehicle" tooltip="Edit the current vehicle" image="editVehicle.png" command="py: $EXTENSION_DIR.editVehicle.mainFunc()"/>
         <action tag="Add" text="Add Part" tooltip="Add a new part to database" image="addPart.png" command="py: $EXTENSION_DIR.addPart.mainFunc()"/>
         <action tag="Edit" text="Edit Part" tooltip="Edit existing Part in database" image="editPart.png" command="py: $EXTENSION_DIR.editPart.mainFunc()"/>
+        <action tag="ExportInclude" text="Export Include" tooltip="Export selected include" image="exportInclude.png" command="py: $EXTENSION_DIR.exportInclude.mainFunc()"/>
     </actionlist>
 	<page tag="Iveco_Custom_Build" text="Iveco Custom Build">
         <group tag="Model_menu" text="Model">
@@ -13,6 +14,9 @@
         <group tag="Database_menu" text="Database">
             <action actiontag="Add"/>
             <action actiontag="Edit"/>
+        </group>
+        <group tag="Export_menu" text="Export">
+            <action actiontag="ExportInclude"/>
         </group>
     </page>
 </root>
