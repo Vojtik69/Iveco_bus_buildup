@@ -13,7 +13,7 @@ from hwx import gui as gui2
 import pandas as pd
 
 from common import (
-    repair_exported_include, split_text
+    repair_exported_include, split_text, create_backup_file
 )
 
 class DialogExportInclude:
@@ -64,6 +64,10 @@ class DialogExportInclude:
         if self.widgetyExportInclude['vyber_cesta'].value == "":
             gui2.tellUser("Path is empty.")
             return
+
+        if self.widgetyExportInclude['vyber_cesta'].value != "" and os.path.isfile(
+                self.widgetyExportInclude['vyber_cesta'].value):
+            create_backup_file(self.widgetyExportInclude['vyber_cesta'].value)
 
         hw.evalTcl(f'*createstringarray 2 "HMBOMCOMMENTS_XML" "HMMATCOMMENTS_XML"')
         hw.evalTcl(f'*feoutput_singleinclude 1 "{self.widgetyExportInclude["vyber_include"].value}" "C:/Program Files/Altair/2023.1/hwdesktop/templates/feoutput/radioss/radioss2023.blk" "{self.widgetyExportInclude["vyber_cesta"].value}" 1 0 2 1 2')

@@ -28,7 +28,7 @@ proc changing_interface_finished {} {
 
 proc equivalence {} {
     *createmark nodes 1 "all"
-    *equivalence nodes 1 0.01 1 0 0 0
+    *equivalence nodes 1 0.04 1 0 0 0
 }
 
 proc relink_connectors {} {

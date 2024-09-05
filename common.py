@@ -17,6 +17,8 @@ import os
 import re
 import traceback
 from loadConfig import paths
+import shutil
+from datetime import datetime
 
 logger.debug("loading common.py")
 
@@ -696,6 +698,21 @@ def split_text(text):
             result.append(part)
 
     return result
+
+
+def create_backup_file(file_path):
+    dir_name, file_name = os.path.split(file_path)
+
+    timestamp = datetime.now().strftime("_bckp_%Y-%m-%d-%H-%M-%S")
+
+    name, ext = os.path.splitext(file_name)
+    backup_file_name = f"{name}{timestamp}{ext}"
+
+    backup_file_path = os.path.join(dir_name, backup_file_name)
+
+    shutil.copy(file_path, backup_file_path)
+
+    logger.debug(f"Backup created: {backup_file_path}")
 
 
 solverInterface = ['"OptiStruct" {}', '"RadiossBlock" "Radioss2023"']
