@@ -264,3 +264,26 @@ proc correct_nodes {} {
     }
 
 }
+
+proc detach_includes {} {
+    set include_list [hm_getincludes]
+    foreach include_id $include_list {
+        puts $include_id
+        set remaining_includes [lsearch -all -inline -not $include_list $include_id]
+
+        #it is necessary to convert list to arguments and then evaluate it as cmd
+        set cmd "*createmark nodes 1 \"by include\""
+        foreach id $remaining_includes {
+            append cmd " $id"
+        }
+
+        *createmark elems 1 "by include" $include_id
+        puts [hm_marklength elems 1]
+        eval $cmd
+        puts $remaining_includes
+        puts [hm_marklength nodes 1]
+        if {[hm_marklength elems 1] > 0 &&  [hm_marklength nodes 1] > 0} {
+            *detach_fromelements 1 nodes 1 0
+            }
+    }
+}

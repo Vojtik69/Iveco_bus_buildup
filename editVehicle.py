@@ -92,12 +92,21 @@ class ModelEdit:
             except Exception as e:
                 logger.logger.critical(f"not able to unrealize connectors: {e}")
 
+
+            logger.debug("detaching includes from each other")
+            try:
+                hw.evalTcl(f'source "{paths["tcl"]}"; detach_includes')
+            except Exception as e:
+                logger.logger.critical(f"not able to detach includes from each other: {e}")
+
+
             try:
                 logger.debug(f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
                 hw.evalTcl(
                     f'*removeincludes include_ids = {{ {" ".join(map(str, listOfIncludesIds))} }} remove_contents = 1')
             except Exception as e:
                 logger.logger.critical(f"Unable to delete rest of includes: {e}")
+
 
             logger.debug("correcting nodes in main include")
             try:
