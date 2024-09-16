@@ -248,19 +248,21 @@ proc create_include {name} {
 
 proc correct_nodes {} {
     *createmark nodes 1 "by include" 0
-    *findmark nodes 1 1 1 elements 0 2
+    if {[hm_marklength nodes 1] > 0} {
+        *findmark nodes 1 1 1 elements 0 2
 
-    foreach include_id [hm_getincludes] {
-        *clearmark nodes 2
-        *clearmark elems 1
-        *createmark elems 1 "by include" $include_id
-        *markintersection elems 1 elems 2
-        if {[hm_marklength elems 1] > 0} {
-            *findmark elems 1 1 1 nodes 0 2
-            *markintersection nodes 2 nodes 1
-            *markmovetoinclude nodes 2 $include_id
+        foreach include_id [hm_getincludes] {
+            *clearmark nodes 2
+            *clearmark elems 1
+            *createmark elems 1 "by include" $include_id
+            *markintersection elems 1 elems 2
+            if {[hm_marklength elems 1] > 0} {
+                *findmark elems 1 1 1 nodes 0 2
+                *markintersection nodes 2 nodes 1
+                *markmovetoinclude nodes 2 $include_id
+            }
+
         }
-
     }
 
 }
@@ -268,6 +270,7 @@ proc correct_nodes {} {
 proc detach_includes {} {
     set include_list [hm_getincludes]
     foreach include_id $include_list {
+        *setcurrentinclude $include_id ""
         puts $include_id
         set remaining_includes [lsearch -all -inline -not $include_list $include_id]
 

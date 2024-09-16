@@ -71,6 +71,22 @@ class ModelEdit:
         hw.evalTcl('*end_batch_import')
         try:
             hw.evalTcl('*start_batch_import 2')
+            # logger.debug('*createmark nodes 1 "by include" 1; puts "nodes in [hm_marklength nodes 1]"')
+
+
+            try:
+                hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
+            except Exception as e:
+                logger.logger.critical(f"not able to unrealize connectors: {e}")
+
+
+            logger.debug("detaching includes from each other")
+            try:
+                hw.evalTcl(f'source "{paths["tcl"]}"; detach_includes')
+            except Exception as e:
+                logger.logger.critical(f"not able to detach includes from each other: {e}")
+
+
             for part in data:
                 if part != "---":
                     if part in listOfIncludes:
@@ -86,18 +102,6 @@ class ModelEdit:
                         else:
                             hw.evalTcl(f'source "{paths["tcl"]}"; create_include "{part}"')
                             logger.debug(f"Include file {path} for {part} does not exist. Creating empty include.")
-
-            try:
-                hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
-            except Exception as e:
-                logger.logger.critical(f"not able to unrealize connectors: {e}")
-
-
-            logger.debug("detaching includes from each other")
-            try:
-                hw.evalTcl(f'source "{paths["tcl"]}"; detach_includes')
-            except Exception as e:
-                logger.logger.critical(f"not able to detach includes from each other: {e}")
 
 
             try:
