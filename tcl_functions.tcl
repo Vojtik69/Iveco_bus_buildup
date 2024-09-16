@@ -138,10 +138,17 @@ proc realize_in_order {what} {
     *clearmark connectors 2
 }
 
-proc realize_connectors_by_type {id type} {
+proc realize_connectors_by_type {type {id ""}} {
     *clearmark connectors 1
-    *createmark connectors 1 "by include" $id
-    if {[hm_marklength connectors 1] < 1} {return}
+    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to realize $type connectors in include $id"
+    if {[info exists id] && $id != ""} {
+        *createmark connectors 1 "by include" $id
+        if {[hm_marklength connectors 1] < 1} {return}
+        *setcurrentinclude $id ""
+    } else {
+        *createmark connectors 1 "all"
+        if {[hm_marklength connectors 1] < 1} {return}
+    }
     set inputList [hm_ce_datalist 1]
     set stitch {}
     set others {}
@@ -186,8 +193,13 @@ proc change_cardimage_of_rigid_components {} {
 
 proc realize_connectors {} {
     puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - in realize_connectors proc"
+    set HMversion [hm_info -appinfo VERSION]
+    if {$HMversion < 24} {
+        *setoption g_ce_elem_org_option=2
+    } else {
+        *setoption g_ce_org_option=1
+    }
 
-    *setoption g_ce_elem_org_option=4
     puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to relink connectors"
     relink_connectors
     *clearmark connectors 1
@@ -195,15 +207,15 @@ proc realize_connectors {} {
     *CE_ConnectorRemoveDuplicates 1 0.1
 
     set includes [hm_getincludes]
-    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to realize stitch connectors"
-    foreach include $includes {
-        *setcurrentinclude $include ""
-        realize_connectors_by_type $include "stitch"
-    }
-    puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to realize other connectors"
-    foreach include $includes {
-        *setcurrentinclude $include ""
-        realize_connectors_by_type $include "others"
+
+    if {$HMversion < 24} {
+        foreach include $includes {
+            realize_connectors_by_type "stitch" $include
+            realize_connectors_by_type "others" $include
+         }
+    } else {
+        realize_connectors_by_type "stitch"
+        realize_connectors_by_type "others"
     }
 
     puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - going to equivalence"
