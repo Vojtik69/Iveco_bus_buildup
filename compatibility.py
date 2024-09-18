@@ -142,6 +142,10 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
 
 
     def addPartToDB(event, parts, partInfo):
+        if parts.index.get_level_values(1).value_counts().get(partInfo.get('partName', '---'), 0) > 0:
+            gui2.tellUser("The name of the part already exist in DB. It cannot be added as new.")
+            return
+
         logger.debug(f"parts in addPartToDB:{parts}")
         logger.debug(f"partInfo.values(): {partInfo.values()}")
         new_row_df = pd.DataFrame(pd.NA, index=[tuple(partInfo.values())], columns=parts.columns)
@@ -251,6 +255,9 @@ def SetCompatibilityGUI(initiator,typ, hierarchyOfTypes, parts, partInfo):
     if initiator.caption == "Edit Part":
         confirm = gui.Button('Edit in DB', command=lambda event: editCompatibilityInDB(event, parts, partInfo))
         addNew = gui.Button('Add as new', command=lambda event: addPartToDB(event, parts, partInfo))
+        if parts.index.get_level_values(1).value_counts().get(partInfo.get('partName', '---'), 0) > 0:
+            addNew.enabled = False
+            addNew.tooltip = "The name of the part already exist in DB. It cannot be added as new."
     elif initiator.caption == "Add Part":
         confirm = gui.Button('Add to DB', command=lambda event: addPartToDB(event, parts, partInfo))
         addNew = "<->"

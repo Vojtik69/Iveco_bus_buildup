@@ -133,6 +133,10 @@ class DialogEditPart:
         )
 
     def checkNotEmpty(self):
+        if not self.widgetyEditPart['vyber_nazev_original'].value:
+            gui2.tellUser(f"Original part to be edited has not been selected. Please, select one.")
+            return
+
         if self.widgetyEditPart['vyber_nazev_new'].value in findAllParts(parts):
             if self.widgetyEditPart['vyber_nazev_original'].value != self.widgetyEditPart['vyber_nazev_new'].value:
                 gui2.tellUser("New name of part is not unique")
