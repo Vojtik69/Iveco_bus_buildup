@@ -70,9 +70,7 @@ class ModelEdit:
         # to be safe, we will end batch import if it was not terminated earlier
         hw.evalTcl('*end_batch_import')
         try:
-            hw.evalTcl('*start_batch_import 2')
             # logger.debug('*createmark nodes 1 "by include" 1; puts "nodes in [hm_marklength nodes 1]"')
-
 
             try:
                 hw.evalTcl(f'source "{paths["tcl"]}"; unrealize_connectors')
@@ -86,6 +84,7 @@ class ModelEdit:
             except Exception as e:
                 logger.logger.critical(f"not able to detach includes from each other: {e}")
 
+            hw.evalTcl('*start_batch_import 2')
 
             for part in data:
                 if part != "---":

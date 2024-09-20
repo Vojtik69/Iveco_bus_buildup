@@ -195,7 +195,7 @@ proc realize_connectors {} {
     puts "[clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] - in realize_connectors proc"
     set HMversion [hm_info -appinfo VERSION]
     if {$HMversion < 24} {
-        *setoption g_ce_elem_org_option=2
+        *setoption g_ce_elem_org_option=4
     } else {
         *setoption g_ce_org_option=1
     }
